@@ -1,4 +1,13 @@
 import _ from 'lodash';
+
+// types.d.ts
+declare global {
+    interface Window {
+        _: _.LoDashStatic;
+        axios: typeof axios;
+    }
+}
+
 window._ = _;
 
 /**

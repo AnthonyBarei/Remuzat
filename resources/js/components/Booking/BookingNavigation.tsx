@@ -2,12 +2,10 @@ import React from 'react';
 import { Box, Typography, Stack, IconButton, Button } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
-import { WeekInfo } from './utils';
+import { WeekInfo } from './interfaces';
 
-const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onNextWeek: () => void, onToday: () => void}> = ({week, onPrevWeek, onNextWeek, onToday}) => {
-    console.log(week);
-    
-
+const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onNextWeek: () => void, onToday: () => void, onBook: () => void, displayBookingForm: boolean}> 
+= ({week, onPrevWeek, onNextWeek, onToday, onBook, displayBookingForm}) => {    
     return (
         <Box sx={{width: '100%'}}>
             <Typography component="h6" variant="h6" gutterBottom sx={{mb: 3}}>
@@ -21,7 +19,7 @@ const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onN
                     <IconButton color="primary" onClick={onNextWeek}><ArrowForwardIosIcon fontSize="small"/></IconButton>
                 </Stack>
 
-                <Button variant="outlined" onClick={() => console.log('click')}>Réserver</Button>
+                <Button variant="outlined" onClick={onBook}>{!displayBookingForm ? 'Réserver' : 'Annuler'}</Button>
             </Box>
         </Box>
     );

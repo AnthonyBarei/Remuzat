@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\RegisterController;
 use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\BookingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,4 +34,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/me', [LoginController::class, 'me']);
     Route::get('/count/users', [UserController::class, 'count']);
     Route::resource('/users', UserController::class);
+
+    // Booking routes
+    Route::resource('/bookings', BookingController::class);
 });

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navigation from './BookingNavigation';
 import BookingTable from './BookingTable';
 import MainLayout from '../Layouts/Main';
-import { generateBookings, getCurrentWeekDays, BookingInfo, WeekInfo } from './utils';
+import { WeekInfo, BookingInfo } from './interfaces';
+import { generateBookings, getCurrentWeekDays, getNextWeekDays, getPreviousWeekDays } from './utils';
+import BookingAddForm from './BookingAdd';
 
 const week = getCurrentWeekDays();
 const random_bookings = generateBookings();
@@ -10,22 +12,43 @@ const random_bookings = generateBookings();
 const Booking: React.FC = () => {
     const [currentWeek, setCurrentWeek] = useState<WeekInfo[]>(week); // Array of 7 Date objects
     const [bookings, setBookings] = useState<BookingInfo[]>(random_bookings);
+    const [displayBookingForm, setDisplayBookingForm] = useState<boolean>(false);
+
+    useEffect(() => {
+        getBookings();
+    }, [currentWeek]);
+
+    const getBookings = () => {
+        // fetch bookings from API
+        const bookings = generateBookings();
+        setBookings(bookings);
+    };
 
     const onPrevWeek = () => {
-        // Logic to update currentWeek to previous week
+        const previousWeek = getPreviousWeekDays(currentWeek);
+        setCurrentWeek(previousWeek);
     };
 
     const onNextWeek = () => {
-        // Logic to update currentWeek to next week
+        const nextWeek = getNextWeekDays(currentWeek);
+        setCurrentWeek(nextWeek);
     };
 
     const onToday = () => {
-        // Logic to update currentWeek to the current week
+        const week = getCurrentWeekDays();
+        setCurrentWeek(week);
+    };
+
+    const onBook = () => {
+        setDisplayBookingForm((displayBookingForm) => !displayBookingForm);
     };
 
     return (
         <MainLayout>
-            <Navigation week={currentWeek} onPrevWeek={onPrevWeek} onNextWeek={onNextWeek} onToday={onToday}/>
+            <Navigation week={currentWeek} onPrevWeek={onPrevWeek} onNextWeek={onNextWeek} onToday={onToday} onBook={onBook} displayBookingForm={displayBookingForm}/>
+            {displayBookingForm && (
+                <BookingAddForm/>
+            )}
             <BookingTable week={currentWeek} bookings={bookings}/>
         </MainLayout>
     );

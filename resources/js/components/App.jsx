@@ -1,6 +1,9 @@
 // React
 import React from 'react';
 import { Routes, Route } from "react-router-dom";
+// Mui
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 // Components
 import Loading from './Main/Loading';
 import Login from './Pages/Auth/Login';
@@ -15,7 +18,7 @@ const App = () => {
     const { loading } = useAuth();
 
     return (
-        <>
+        <LocalizationProvider dateAdapter={AdapterMoment}>
             {!loading ? (
                 <Routes>
                     <Route path="/login" element={<Login/>}/>
@@ -27,7 +30,7 @@ const App = () => {
             ) : (
                 <Loading/>
             )}
-        </>
+        </LocalizationProvider>
     );
 
 }
