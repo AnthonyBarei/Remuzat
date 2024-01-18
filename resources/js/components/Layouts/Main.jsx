@@ -9,11 +9,14 @@ import {
 
 
 import Copyright from "./Copyright";
+import ResponsiveAppBar from "./Appbar/Navbar";
 
 const MainLayout = ({children}) => {
     return (
         <Box sx={{ display: 'flex', }}>
             <CssBaseline/>
+
+            <ResponsiveAppBar/>
 
             <Container component="main" maxWidth="false">
                 <Toolbar />

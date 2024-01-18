@@ -5,7 +5,7 @@ import { Routes, Route } from "react-router-dom";
 import Loading from './Main/Loading';
 import Login from './Pages/Auth/Login';
 import SignUp from './Pages/Auth/SignUp';
-import Home from './Pages/Home';
+import Booking from './Booking/Booking';
 // Routes
 import { PrivateRoutes } from './Routes/ProtectedRoutes';
 // Auth
@@ -21,7 +21,7 @@ const App = () => {
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/signup" element={<SignUp/>}/>
                     <Route element={<PrivateRoutes/>}>
-                        <Route path="/" element={<Home/>}></Route>
+                        <Route path="/" element={<Booking/>}></Route>
                     </Route>
                 </Routes>
             ) : (
