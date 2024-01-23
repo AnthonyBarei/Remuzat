@@ -34,36 +34,32 @@ class BookingController extends BaseController
         ]);
 
         try {
-            $start = date('Y-m-d', strtotime($request->input('start_date')));
-            $end = date('Y-m-d', strtotime($request->input('end_date')));
-            $end = date('Y-m-d 23:59:59', strtotime($end)); // make sure end is at 23:59:59
+            // start with start date at midnigth
+            $start = date('Y-m-d 00:00:00', strtotime($request->input('start_date')));
+            $end = date('Y-m-d 23:59:59', strtotime($request->input('end_date')));
 
             // get the day number of start date
             $start_day = date('N', strtotime($start));
 
-            // get the number of days between start and end
-            $gap = date_diff(date_create($start), date_create($end))->format('%a');
+            // duration of the booking in days
+            $duration = floor((strtotime($end) - strtotime($start)) / (60 * 60 * 24)) + 1;
 
-            // duration is the number of days between start and end + 1
-            $duration = $gap + 1;
+            // gap between end date and next monday
+            $gap = 7 - date('N', strtotime($end));
 
             $type = $request->input('type'); // should be 'vacation' or 'meeting'
 
             // get the user id of the user who added the booking
             $added_by = auth()->user()->id;
 
-
-            // TODO : verify previous values definition
-
-
             $booking = new Booking;
-            $booking->start = $request->input('start');
-            $booking->end = $request->input('end');
-            $booking->start_day = $request->input('start_day');
-            $booking->gap = $request->input('gap');
-            $booking->duration = $request->input('duration');
-            $booking->type = $request->input('type');
-            $booking->added_by = $request->input('added_by');
+            $booking->start = $start;
+            $booking->end = $end;
+            $booking->start_day = $start_day;
+            $booking->gap = $gap;
+            $booking->duration = $duration;
+            $booking->type = $type;
+            $booking->added_by = $added_by;
             $booking->save();
 
             // return successful response

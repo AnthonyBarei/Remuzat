@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Button, Box, Grid } from '@mui/material';
+import { Button, Box, Grid, FormControl } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { InputLabel, MenuItem, Select } from '@mui/material';
 
 const BookingAddForm: React.FC = () => {
     const [startDate, setStartDate] = useState<Date | null>(null);
@@ -19,6 +20,7 @@ const BookingAddForm: React.FC = () => {
         const params = {
             start_date: data.start_date,
             end_date: data.end_date,
+            type: data.type,
         };
 
         window.axios.post('/api/bookings', params)
@@ -61,6 +63,21 @@ const BookingAddForm: React.FC = () => {
                         format='DD-MM-YYYY'
                         name="end_date"
                     />
+                </Grid>
+
+                <Grid item>
+                    <FormControl variant="outlined" size="small">
+                        <InputLabel id="booking-type-select-label">Type</InputLabel>
+                        <Select
+                            labelId="booking-type-select-label"
+                            id="booking-type-select"
+                            label="Type"
+                            name="type"
+                        >
+                            <MenuItem value="booking">Réservation</MenuItem>
+                            <MenuItem value="meeting">Rendez-vous</MenuItem>
+                        </Select>
+                    </FormControl>
                 </Grid>
 
                 <Grid item>
