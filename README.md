@@ -1,64 +1,196 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400"></a></p>
+# Remuzat Booking System
 
-<p align="center">
-<a href="https://travis-ci.org/laravel/framework"><img src="https://travis-ci.org/laravel/framework.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A beautiful booking system for the village of Remuzat, built with Laravel 9 and React 18.
 
-## About Laravel
+![Remuzat Booking System](https://img.shields.io/badge/Laravel-9-red?style=for-the-badge&logo=laravel)
+![React](https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)
+![Material-UI](https://img.shields.io/badge/Material--UI-5.0-blue?style=for-the-badge&logo=mui)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🌟 Features
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Booking System
+- **Beautiful Calendar Interface**: Week-based calendar view with intuitive booking management
+- **Multi-day Bookings**: Support for extended stays with visual indicators
+- **Booking Types**: Currently supports holiday bookings (expandable to meetings/vacations)
+- **Status Management**: Pending, approved, and cancelled booking states
+- **Overlap Prevention**: Automatic validation to prevent double bookings
+- **Real-time Updates**: Immediate UI updates after booking creation
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### User Experience
+- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
+- **Dark/Light Theme**: User preference-based theming with Material-UI
+- **Color Customization**: Users can set their preferred color scheme
+- **Loading States**: Smooth loading indicators and error handling
+- **Form Validation**: Client and server-side validation with clear feedback
 
-## Learning Laravel
+### Authentication & Security
+- **Laravel Sanctum**: Secure API authentication
+- **User Registration/Login**: Complete authentication flow
+- **Role-based Access**: User and admin permissions
+- **CSRF Protection**: Built-in security measures
+- **Input Validation**: Comprehensive data validation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### Landing Page
+- **Beautiful Hero Section**: Showcasing the village of Remuzat
+- **Responsive Navigation**: Fixed transparent navbar with smooth scrolling
+- **Feature Highlights**: Key benefits of the booking system
+- **Call-to-Action**: Clear path to start booking
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🚀 Tech Stack
 
-## Laravel Sponsors
+### Backend
+- **Laravel 9**: PHP framework with elegant syntax
+- **MySQL/PostgreSQL**: Database support
+- **Laravel Sanctum**: API authentication
+- **Eloquent ORM**: Database relationships and queries
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+### Frontend
+- **React 18**: Modern React with hooks
+- **TypeScript**: Type-safe development
+- **Material-UI (MUI)**: Beautiful, accessible components
+- **Vite**: Fast build tool and dev server
+- **React Router**: Client-side routing
 
-### Premium Partners
+## 📁 Project Structure
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+```
+remuzat/
+├── app/
+│   ├── Http/Controllers/Api/     # API controllers
+│   ├── Models/                   # Eloquent models
+│   └── Http/Resources/           # API resources
+├── resources/js/
+│   ├── components/
+│   │   ├── Booking/             # Booking components
+│   │   ├── Layouts/             # Layout components
+│   │   ├── Pages/               # Page components
+│   │   └── Routes/              # Route components
+│   └── context/                 # React context
+├── database/migrations/          # Database migrations
+└── routes/api.php               # API routes
+```
 
-## Contributing
+## 🛠️ Installation
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Prerequisites
+- PHP 8.1+
+- Composer
+- Node.js 16+
+- MySQL/PostgreSQL
 
-## Code of Conduct
+### Backend Setup
+```bash
+# Clone the repository
+git clone <repository-url>
+cd remuzat
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Install PHP dependencies
+composer install
 
-## Security Vulnerabilities
+# Copy environment file
+cp .env.example .env
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Generate application key
+php artisan key:generate
 
-## License
+# Configure database in .env file
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=remuzat
+# DB_USERNAME=root
+# DB_PASSWORD=
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Run migrations
+php artisan migrate
+
+# Start the server
+php artisan serve
+```
+
+### Frontend Setup
+```bash
+# Install Node.js dependencies
+npm install
+
+# Build assets for development
+npm run dev
+
+# Or build for production
+npm run build
+```
+
+## 🎯 Usage
+
+### For Users
+1. Visit the landing page to learn about Remuzat
+2. Navigate to `/booking` to access the booking system
+3. Register or login to your account
+4. Use the calendar interface to create bookings
+5. View and manage your existing bookings
+
+### For Developers
+- API documentation available at `/api` endpoints
+- All booking endpoints require authentication
+- Use Postman or similar tools for API testing
+- Check the `.cursorrules` file for coding standards
+
+## 🔧 API Endpoints
+
+### Authentication
+- `POST /api/register` - User registration
+- `POST /api/login` - User login
+- `POST /api/logout` - User logout
+
+### Bookings
+- `GET /api/bookings` - List user's bookings
+- `POST /api/bookings` - Create new booking
+- `PUT /api/bookings/{id}` - Update booking
+- `DELETE /api/bookings/{id}` - Cancel booking
+
+### User Profile
+- `GET /api/user/profile` - Get user profile
+- `PUT /api/user/profile` - Update user profile
+
+## 🎨 Customization
+
+### Theming
+- Modify `resources/js/context/theme.js` for theme changes
+- User color preferences are stored in the database
+- Material-UI theme provider handles dark/light modes
+
+### Booking Types
+- Currently supports "booking" type (holidays)
+- Extend `BookingController` and database for additional types
+- Update frontend components to handle new types
+
+## 🧪 Testing
+
+```bash
+# Run PHP tests
+php artisan test
+
+# Run frontend tests (if configured)
+npm test
+```
+
+## 📝 Contributing
+
+1. Follow the coding standards in `.cursorrules`
+2. Use TypeScript for all frontend components
+3. Implement proper error handling
+4. Add tests for new features
+5. Ensure responsive design
+
+## 📄 License
+
+This project is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## 🤝 Support
+
+For support and questions, please refer to the project documentation or create an issue in the repository.
+
+---
+
+**Built with ❤️ for the beautiful village of Remuzat**

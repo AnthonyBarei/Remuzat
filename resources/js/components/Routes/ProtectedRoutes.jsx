@@ -6,6 +6,6 @@ export const PrivateRoutes = ({children}) => {
     const location = useLocation();
 
     return (
-        authed ? <Outlet/> : <Navigate to="login" state={{ from: location }}/>
+        authed ? <Outlet/> : <Navigate to="/login" state={{ from: location }}/>
     )
 }

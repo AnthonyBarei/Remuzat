@@ -18,9 +18,11 @@ return new class extends Migration
             $table->dateTime('start');
             $table->dateTime('end');
             $table->integer('start_day');
+            $table->integer('end_day');
             $table->integer('gap');
             $table->integer('duration');
             $table->string('type');
+            $table->enum('status', ['pending', 'approved', 'cancelled'])->default('pending');
             $table->integer('added_by');
             $table->integer('validated_by')->nullable();
             $table->timestamps();

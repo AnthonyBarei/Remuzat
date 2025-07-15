@@ -1,0 +1,148 @@
+# Remuzat Booking System - Cursor Rules
+
+## Project Overview
+This is a Laravel 9 + React + TypeScript booking system for a beautiful village called Remuzat. Users can book holidays (currently the only booking type) with a beautiful calendar interface. The system includes a landing page and a protected booking area.
+
+## Tech Stack
+- **Backend**: Laravel 9 with Sanctum authentication
+- **Frontend**: React 18 + TypeScript + Material-UI + Vite
+- **Database**: MySQL/PostgreSQL
+- **Styling**: Material-UI (MUI) with custom theming
+
+## Code Standards
+
+### Laravel Backend
+- Use Laravel naming conventions (snake_case for DB, camelCase for methods)
+- Always validate input data in controllers
+- Use Eloquent relationships properly
+- Return consistent API responses using BaseController
+- Use proper HTTP status codes (200, 201, 400, 401, 403, 404, 422, 500)
+- Always handle exceptions with try-catch blocks
+- Use Laravel's built-in validation rules
+- Implement proper authorization checks (users can only access their own data)
+
+### React Frontend
+- Use TypeScript for all components
+- Use functional components with hooks
+- Follow Material-UI design patterns
+- Use proper TypeScript interfaces for all data structures
+- Handle loading states and error states properly
+- Use async/await for API calls
+- Implement proper form validation
+- Use React Context for global state management (auth, theme)
+
+### File Structure
+```
+app/
+├── Http/Controllers/Api/     # API controllers
+├── Models/                   # Eloquent models
+├── Http/Resources/           # API resources
+└── Http/Middleware/          # Custom middleware
+
+resources/js/
+├── components/               # React components
+│   ├── Booking/             # Booking-related components
+│   ├── Layouts/             # Layout components (Appbar, LandingNavbar)
+│   ├── Pages/               # Page components (Auth, Landing)
+│   └── Routes/              # Route components
+├── context/                 # React context (auth, theme)
+└── types/                   # TypeScript type definitions
+```
+
+## Business Rules
+
+### Booking System
+- Users can only create, view, and cancel their own bookings
+- Admins can manage all bookings (approve, modify, delete)
+- Bookings have states: pending, approved, cancelled
+- No overlapping bookings allowed
+- Currently only supports "booking" type (holidays)
+- Multi-day bookings are supported with visual indicators
+- Bookings appear immediately after creation
+
+### User Management
+- Users can customize their color preference
+- Users can access account parameters
+- Admin users have special privileges
+- Authentication uses Laravel Sanctum
+
+### UI/UX Guidelines
+- Use consistent color scheme based on user preferences
+- Implement dark/light theme support
+- Show loading states appropriately (but not on individual calendar columns)
+- Provide clear success/error feedback
+- Use Material-UI components consistently
+- Responsive design for all screen sizes
+- Smooth transitions and animations
+
+### Routing Structure
+- `/` - Landing page (public)
+- `/booking` - Booking system (protected)
+- `/login` - Login page (redirects to /booking after auth)
+- `/signup` - Registration page (redirects to /booking after auth)
+
+## API Endpoints
+- `GET /api/bookings` - List user's bookings (with week filtering)
+- `POST /api/bookings` - Create booking
+- `PUT /api/bookings/{id}` - Update booking
+- `DELETE /api/bookings/{id}` - Cancel booking
+- `GET /api/user/profile` - Get user profile
+- `PUT /api/user/profile` - Update user profile
+- `POST /api/register` - User registration
+- `POST /api/login` - User login
+- `POST /api/logout` - User logout
+
+## Security
+- All booking endpoints require authentication
+- Users can only access their own data
+- Admins can access all data
+- Validate all input data
+- Use CSRF protection for web routes
+- Use Sanctum tokens for API authentication
+- Proper authorization checks in controllers
+
+## Performance
+- Use eager loading for relationships
+- Implement proper database indexing
+- Use pagination for large datasets
+- Optimize React component rendering
+- Use proper caching strategies
+- Load bookings overlapping the selected week for better UX
+
+## Testing
+- Write unit tests for models
+- Write feature tests for API endpoints
+- Test user permissions and authorization
+- Test booking validation rules
+- Test UI interactions
+- Test booking overlap prevention
+
+## Deployment
+- Use environment variables for configuration
+- Implement proper logging
+- Use database migrations
+- Set up proper error monitoring
+- Configure proper CORS settings
+- Build frontend assets for production
+
+## Current Features
+- ✅ Landing page with hero section and navigation
+- ✅ User authentication (register/login/logout)
+- ✅ Week-based calendar interface
+- ✅ Booking creation with validation
+- ✅ Booking cancellation (user's own pending bookings)
+- ✅ Multi-day booking support
+- ✅ Real-time UI updates
+- ✅ Dark/light theme support
+- ✅ User color preferences
+- ✅ Responsive design
+- ✅ Loading states and error handling
+
+## Future Enhancements
+- Admin panel for booking management
+- Additional booking types (meetings, vacations)
+- Email notifications
+- Booking approval workflow
+- Advanced filtering and search
+- Calendar export functionality
+- Payment integration 

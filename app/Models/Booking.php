@@ -20,9 +20,11 @@ class Booking extends Model
         'start',
         'end',
         'start_day',
+        'end_day',
         'gap',
         'duration',
         'type',
+        'status',
         'added_by',
         'validated_by',
     ];
@@ -42,7 +44,8 @@ class Booking extends Model
      * @var array<string, string>
      */
     protected $casts = [
-            
+        'start' => 'datetime',
+        'end' => 'datetime',
     ];
 
     /**
@@ -50,7 +53,7 @@ class Booking extends Model
      */
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'added_by');
     }
 
     /**
@@ -58,6 +61,6 @@ class Booking extends Model
      */
     public function validatedBy()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'validated_by');
     }
 }

@@ -9,6 +9,7 @@ interface WeekInfo {
 };
 
 interface BookingInfo {
+    id?: number;
     start: string;
     end: string;
     start_day: number;
@@ -16,9 +17,19 @@ interface BookingInfo {
     gap: number;
     duration: number;
     type: string;
+    status: 'pending' | 'approved' | 'cancelled';
+    added_by?: number;
+    validated_by?: number;
+    user?: {
+        id: number;
+        firstname: string;
+        lastname: string;
+        color_preference: string;
+    };
 };
 
 interface BookingDetails {
+    id?: number;
     start: string;
     end: string;
     start_day: number;
@@ -31,6 +42,9 @@ interface BookingDetails {
     isStartOutOfWeek: boolean;
     isGap: boolean;
     gapSize?: string;
+    type?: string;
+    status?: 'pending' | 'approved' | 'cancelled';
+    userColor?: string;
 };
 
 interface GapDetails {
@@ -46,6 +60,7 @@ interface GapDetails {
     isStartOutOfWeek?: boolean;
     isGap: boolean;
     gapSize: string;
+    type?: string;
 };
 
 export type { WeekInfo, BookingInfo, BookingDetails, GapDetails };

@@ -9,6 +9,7 @@ import Loading from './Main/Loading';
 import Login from './Pages/Auth/Login';
 import SignUp from './Pages/Auth/SignUp';
 import Booking from './Booking/Booking';
+import Landing from './Pages/Landing';
 // Routes
 import { PrivateRoutes } from './Routes/ProtectedRoutes';
 // Auth
@@ -21,10 +22,11 @@ const App = () => {
         <LocalizationProvider dateAdapter={AdapterMoment}>
             {!loading ? (
                 <Routes>
+                    <Route path="/" element={<Landing/>}/>
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/signup" element={<SignUp/>}/>
                     <Route element={<PrivateRoutes/>}>
-                        <Route path="/" element={<Booking/>}></Route>
+                        <Route path="/booking" element={<Booking/>}></Route>
                     </Route>
                 </Routes>
             ) : (
