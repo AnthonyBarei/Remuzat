@@ -3,11 +3,35 @@ import { Box, Typography, Stack, IconButton, Button, Paper } from '@mui/material
 import { useTheme } from '@mui/material/styles';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import moment from 'moment';
+import 'moment/locale/fr';
 import { WeekInfo } from './interfaces';
+
+// Set French locale for moment
+moment.locale('fr');
 
 const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onNextWeek: () => void, onToday: () => void, onBook: () => void, displayBookingForm: boolean}> 
 = ({week, onPrevWeek, onNextWeek, onToday, onBook, displayBookingForm}) => {
     const theme = useTheme();
+    
+    // Format the week range in French
+    const formatWeekRange = () => {
+        const startDate = moment(week[0].ddmmyyyy, "DD/MM/YYYY");
+        const endDate = moment(week[6].ddmmyyyy, "DD/MM/YYYY");
+        
+        // If same month and year
+        if (startDate.month() === endDate.month() && startDate.year() === endDate.year()) {
+            return `Semaine du ${startDate.format('D')} au ${endDate.format('D MMMM YYYY')}`;
+        }
+        // If different months but same year
+        else if (startDate.year() === endDate.year()) {
+            return `Semaine du ${startDate.format('D MMMM')} au ${endDate.format('D MMMM YYYY')}`;
+        }
+        // If different years
+        else {
+            return `Semaine du ${startDate.format('D MMMM YYYY')} au ${endDate.format('D MMMM YYYY')}`;
+        }
+    };
     
     return (
         <Paper elevation={2} sx={{ 
@@ -24,7 +48,7 @@ const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onN
                 color: 'text.primary', 
                 fontWeight: 600
             }}>
-                Semaine du {week[0].day} au {week[6].day} {week[6].month_name} {week[6].year}
+                {formatWeekRange()}
             </Typography>
             <Box sx={{display: 'flex', justifyContent: 'space-between', mb: 3}}>
                 <Stack spacing={2} direction="row">

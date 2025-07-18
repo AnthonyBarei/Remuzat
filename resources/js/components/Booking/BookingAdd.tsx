@@ -4,6 +4,10 @@ import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { InputLabel, MenuItem, Select } from '@mui/material';
 import moment from 'moment';
+import 'moment/locale/fr';
+
+// Set French locale for moment
+moment.locale('fr');
 
 // Extend Window interface to include axios
 declare global {
@@ -130,7 +134,7 @@ const BookingAddForm: React.FC<BookingAddFormProps> = ({ onBookingCreated }) => 
                             value={startDate}
                             onChange={handleStartDateChange}
                             slotProps={{textField: {size: 'small'}}}
-                            format='DD-MM-YYYY'
+                            format='DD/MM/YYYY'
                             name="start_date"
                             disabled={loading}
                         />
@@ -141,7 +145,7 @@ const BookingAddForm: React.FC<BookingAddFormProps> = ({ onBookingCreated }) => 
                             value={endDate}
                             onChange={handleEndDateChange}
                             slotProps={{textField: {size: 'small'}}}
-                            format='DD-MM-YYYY'
+                            format='DD/MM/YYYY'
                             name="end_date"
                             disabled={loading}
                             minDate={startDate || undefined}

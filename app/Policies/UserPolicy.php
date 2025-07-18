@@ -17,7 +17,7 @@ class UserPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -29,7 +29,7 @@ class UserPolicy
      */
     public function view(User $user, User $model)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -40,7 +40,7 @@ class UserPolicy
      */
     public function create(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -52,7 +52,18 @@ class UserPolicy
      */
     public function update(User $user, User $model)
     {
-        return $user->is_admin;
+        // Admins can update any user, but super admins have additional privileges
+        if (!$user->isAdmin()) {
+            return false;
+        }
+
+        // Super admins can update anyone except themselves (to prevent self-demotion)
+        if ($user->isSuperAdmin()) {
+            return $user->id !== $model->id;
+        }
+
+        // Regular admins can update regular users and other admins, but not super admins
+        return !$model->isSuperAdmin();
     }
 
     /**
@@ -64,7 +75,13 @@ class UserPolicy
      */
     public function delete(User $user, User $model)
     {
-        return $user->is_admin;
+        // Only super admins can delete users
+        if (!$user->isSuperAdmin()) {
+            return false;
+        }
+
+        // Super admins cannot delete themselves
+        return $user->id !== $model->id;
     }
 
     /**
@@ -76,7 +93,7 @@ class UserPolicy
      */
     public function restore(User $user, User $model)
     {
-        return $user->is_admin;
+        return $user->isSuperAdmin();
     }
 
     /**
@@ -88,6 +105,47 @@ class UserPolicy
      */
     public function forceDelete(User $user, User $model)
     {
-        return $user->is_admin;
+        // Only super admins can permanently delete users
+        if (!$user->isSuperAdmin()) {
+            return false;
+        }
+
+        // Super admins cannot delete themselves
+        return $user->id !== $model->id;
+    }
+
+    /**
+     * Determine if the user can manage user roles (super admin only).
+     *
+     * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function manageUserRoles(User $user)
+    {
+        return $user->isSuperAdmin();
+    }
+
+    /**
+     * Determine if the user can promote users to admin (super admin only).
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $targetUser
+     * @return bool
+     */
+    public function promoteToAdmin(User $user, User $targetUser)
+    {
+        return $user->isSuperAdmin() && $targetUser->id !== $user->id;
+    }
+
+    /**
+     * Determine if the user can demote admins (super admin only).
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $targetUser
+     * @return bool
+     */
+    public function demoteAdmin(User $user, User $targetUser)
+    {
+        return $user->isSuperAdmin() && $targetUser->id !== $user->id;
     }
 }

@@ -18,7 +18,7 @@ class AdminPolicy
      */
     public function viewDashboard(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -29,7 +29,7 @@ class AdminPolicy
      */
     public function viewAnalytics(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -40,7 +40,7 @@ class AdminPolicy
      */
     public function viewSystemOverview(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -51,7 +51,7 @@ class AdminPolicy
      */
     public function manageUsers(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -62,7 +62,7 @@ class AdminPolicy
      */
     public function manageBookings(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -73,7 +73,7 @@ class AdminPolicy
      */
     public function accessAdmin(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -84,7 +84,7 @@ class AdminPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -96,7 +96,7 @@ class AdminPolicy
      */
     public function view(User $user, Booking $booking)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -107,7 +107,7 @@ class AdminPolicy
      */
     public function create(User $user)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -119,7 +119,7 @@ class AdminPolicy
      */
     public function update(User $user, Booking $booking)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
     }
 
     /**
@@ -131,6 +131,41 @@ class AdminPolicy
      */
     public function delete(User $user, Booking $booking)
     {
-        return $user->is_admin;
+        return $user->isAdmin();
+    }
+
+    /**
+     * Determine if the user can manage user roles (super admin only).
+     *
+     * @param  \App\Models\User  $user
+     * @return bool
+     */
+    public function manageUserRoles(User $user)
+    {
+        return $user->isSuperAdmin();
+    }
+
+    /**
+     * Determine if the user can promote users to admin (super admin only).
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $targetUser
+     * @return bool
+     */
+    public function promoteToAdmin(User $user, User $targetUser)
+    {
+        return $user->isSuperAdmin() && $targetUser->id !== $user->id;
+    }
+
+    /**
+     * Determine if the user can demote admins (super admin only).
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $targetUser
+     * @return bool
+     */
+    public function demoteAdmin(User $user, User $targetUser)
+    {
+        return $user->isSuperAdmin() && $targetUser->id !== $user->id;
     }
 }

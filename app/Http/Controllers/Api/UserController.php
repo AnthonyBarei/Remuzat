@@ -62,6 +62,7 @@ class UserController extends BaseController
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed',
             'is_admin' => 'boolean',
+            'role' => 'sometimes|in:user,admin,super_admin',
         ]);
 
         if ($validator->fails()){
@@ -71,12 +72,26 @@ class UserController extends BaseController
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
         $input['is_admin'] = $request->input('is_admin', false);
+        
+        // Set role based on is_admin or provided role
+        if ($request->has('role')) {
+            $input['role'] = $request->input('role');
+            $input['is_admin'] = in_array($input['role'], ['admin', 'super_admin']);
+        } else {
+            $input['role'] = $input['is_admin'] ? 'admin' : 'user';
+        }
+
+        // Only super admins can create super admins
+        if ($input['role'] === 'super_admin' && !auth()->user()->isSuperAdmin()) {
+            return $this->sendError('Access denied. Only super admins can create super admin users.', [], 403);
+        }
 
         $user = User::create($input);
 
         $name = $user->firstname . (($user->lastname) ? " " . $user->lastname : "");
         $success['name'] =  $name;
         $success['email'] =  $user->email;
+        $success['role'] =  $user->role_display_name;
 
         return $this->sendResponse($success, "User $name registered successfully.");
     }
@@ -127,6 +142,7 @@ class UserController extends BaseController
             'lastname' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'is_admin' => 'boolean',
+            'role' => 'sometimes|in:user,admin,super_admin',
         ]);
 
         if ($validator->fails()) {
@@ -137,6 +153,20 @@ class UserController extends BaseController
         $user->lastname = $request->input('lastname');
         $user->email = $request->input('email');
         $user->is_admin = $request->input('is_admin', false);
+        
+        // Handle role update
+        if ($request->has('role')) {
+            $newRole = $request->input('role');
+            
+            // Only super admins can assign super admin role
+            if ($newRole === 'super_admin' && !auth()->user()->isSuperAdmin()) {
+                return $this->sendError('Access denied. Only super admins can assign super admin role.', [], 403);
+            }
+            
+            $user->role = $newRole;
+            $user->is_admin = in_array($newRole, ['admin', 'super_admin']);
+        }
+        
         $user->save();
 
         $success = [
@@ -146,6 +176,8 @@ class UserController extends BaseController
             'firstname' => $user->firstname,
             'lastname' => $user->lastname,
             'is_admin' => $user->is_admin,
+            'role' => $user->role,
+            'role_display_name' => $user->role_display_name,
             'email_verified_at' => $user->email_verified_at,
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,

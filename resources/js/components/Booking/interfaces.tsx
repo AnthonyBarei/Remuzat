@@ -45,6 +45,13 @@ interface BookingDetails {
     type?: string;
     status?: 'pending' | 'approved' | 'cancelled';
     userColor?: string;
+    user?: {
+        id: number;
+        firstname: string;
+        lastname: string;
+        color_preference: string;
+    };
+    added_by?: number;
 };
 
 interface GapDetails {

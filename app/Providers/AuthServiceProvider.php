@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Booking;
 use App\Policies\UserPolicy;
 use App\Policies\AdminPolicy;
+use App\Policies\SuperAdminPolicy;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -37,5 +38,18 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('view-system-overview', [AdminPolicy::class, 'viewSystemOverview']);
         Gate::define('manage-users', [AdminPolicy::class, 'manageUsers']);
         Gate::define('manage-bookings', [AdminPolicy::class, 'manageBookings']);
+        Gate::define('manage-user-roles', [AdminPolicy::class, 'manageUserRoles']);
+        Gate::define('promote-to-admin', [AdminPolicy::class, 'promoteToAdmin']);
+        Gate::define('demote-admin', [AdminPolicy::class, 'demoteAdmin']);
+
+        // Register super admin gates
+        Gate::define('access-super-admin', [SuperAdminPolicy::class, 'accessSuperAdmin']);
+        Gate::define('view-super-admin-dashboard', [SuperAdminPolicy::class, 'viewSuperAdminDashboard']);
+        Gate::define('manage-admins', [SuperAdminPolicy::class, 'manageAdmins']);
+        Gate::define('manage-system-settings', [SuperAdminPolicy::class, 'manageSystemSettings']);
+        Gate::define('view-advanced-analytics', [SuperAdminPolicy::class, 'viewAdvancedAnalytics']);
+        Gate::define('view-system-logs', [SuperAdminPolicy::class, 'viewSystemLogs']);
+        Gate::define('manage-backups', [SuperAdminPolicy::class, 'manageBackups']);
+        Gate::define('delete-any-user', [SuperAdminPolicy::class, 'deleteAnyUser']);
     }
 }

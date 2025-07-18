@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'color_preference',
         'is_admin',
+        'role',
         'email_verified_at',
     ];
 
@@ -62,7 +63,17 @@ class User extends Authenticatable
      */
     public function isAdmin()
     {
-        return $this->is_admin;
+        return $this->is_admin || $this->role === 'admin' || $this->role === 'super_admin';
+    }
+
+    /**
+     * Check if the user is a super admin.
+     *
+     * @return bool
+     */
+    public function isSuperAdmin()
+    {
+        return $this->role === 'super_admin';
     }
 
     /**
@@ -72,7 +83,39 @@ class User extends Authenticatable
      */
     public function canAccessAdmin()
     {
-        return $this->is_admin;
+        return $this->isAdmin();
+    }
+
+    /**
+     * Check if the user can access super admin functionality.
+     *
+     * @return bool
+     */
+    public function canAccessSuperAdmin()
+    {
+        return $this->isSuperAdmin();
+    }
+
+    /**
+     * Check if the user has a specific role.
+     *
+     * @param string $role
+     * @return bool
+     */
+    public function hasRole($role)
+    {
+        return $this->role === $role;
+    }
+
+    /**
+     * Check if the user has any of the specified roles.
+     *
+     * @param array $roles
+     * @return bool
+     */
+    public function hasAnyRole($roles)
+    {
+        return in_array($this->role, (array) $roles);
     }
 
     /**
@@ -83,5 +126,21 @@ class User extends Authenticatable
     public function getNameAttribute()
     {
         return $this->firstname . ' ' . $this->lastname;
+    }
+
+    /**
+     * Get the user's role display name.
+     *
+     * @return string
+     */
+    public function getRoleDisplayNameAttribute()
+    {
+        $roleNames = [
+            'user' => 'Utilisateur',
+            'admin' => 'Administrateur',
+            'super_admin' => 'Super Administrateur'
+        ];
+
+        return $roleNames[$this->role] ?? 'Inconnu';
     }
 }

@@ -1,6 +1,9 @@
 import moment from "moment";
+import "moment/locale/fr";
 import { BookingInfo, BookingDetails, GapDetails, WeekInfo } from "./interfaces";
 
+// Set French locale for moment
+moment.locale('fr');
 
 // get current week days TODO : fix monday is wrong date :/
 const getCurrentWeekDays = (): WeekInfo[] => {
@@ -22,6 +25,30 @@ const getCurrentWeekDays = (): WeekInfo[] => {
         
         week.push(day);
         currentDate.add(1, 'days');
+    }
+    return week;
+};
+
+// Get week that contains a specific date
+const getWeekForDate = (date: string): WeekInfo[] => {
+    const targetDate = moment(date, "YYYY-MM-DD");
+    const weekStart = targetDate.startOf('isoWeek'); // Start on Monday
+
+    let week: WeekInfo[] = [];
+
+    for (let i = 0; i < 7; i++) {     
+        const day = {
+            ddmmyyyy: weekStart.format('DD/MM/YYYY'),
+            day: weekStart.date(),
+            month: weekStart.month() + 1,
+            month_name: weekStart.format('MMMM'),
+            year: weekStart.year(),
+            day_of_the_week: weekStart.format('dddd'),
+            day_of_the_month: weekStart.date(),
+        };
+        
+        week.push(day);
+        weekStart.add(1, 'days');
     }
     return week;
 };
@@ -97,6 +124,7 @@ const generateBookings = (): BookingInfo[] => {
             // duration
             duration: Math.floor((end.valueOf() - start.valueOf()) / (1000 * 60 * 60 * 24)) + 1, // Duration in days
             type: Math.random() > 0.5 ? 'Meeting' : 'Work',
+            status: 'pending',
         };
 
         bookings.push(booking);
@@ -116,4 +144,4 @@ const generateBookings = (): BookingInfo[] => {
     return bookings;
 };
 
-export { getCurrentWeekDays, getPreviousWeekDays, getNextWeekDays, generateBookings };
+export { getCurrentWeekDays, getPreviousWeekDays, getNextWeekDays, generateBookings, getWeekForDate };

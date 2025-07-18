@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\LoginController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\Api\SuperAdminController;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,10 +21,6 @@ use App\Http\Controllers\Api\AdminController;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user();
-// });
 
 // Public routes
 Route::post('/register', [RegisterController::class, 'register']);
@@ -44,6 +41,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
                 'message' => 'Admin test route working with policies',
                 'user' => auth()->user(),
                 'is_admin' => auth()->user()->is_admin,
+                'role' => auth()->user()->role,
                 'can_access_admin' => Gate::allows('access-admin'),
                 'can_view_dashboard' => Gate::allows('view-dashboard'),
                 'can_manage_users' => Gate::allows('manage-users')
@@ -67,6 +65,37 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/admin/reservations/{booking}/reject', [BookingController::class, 'reject']);
     });
 
-    // Booking routes
-    Route::resource('/reservations', BookingController::class);
+    // Super Admin routes with super admin middleware
+    Route::group(['middleware' => ['auth:sanctum', 'super.admin'], 'prefix' => 'super-admin'], function () {
+        // Test route to verify super admin access
+        Route::get('/test', function () {
+            return response()->json([
+                'success' => true,
+                'message' => 'Super admin test route working',
+                'user' => auth()->user(),
+                'role' => auth()->user()->role,
+                'is_super_admin' => auth()->user()->isSuperAdmin(),
+                'can_access_super_admin' => Gate::allows('access-super-admin'),
+                'can_manage_admins' => Gate::allows('manage-admins'),
+                'can_manage_user_roles' => Gate::allows('manage-user-roles')
+            ]);
+        });
+
+        // Super admin dashboard and analytics
+        Route::get('/dashboard', [SuperAdminController::class, 'dashboard']);
+        Route::get('/users', [SuperAdminController::class, 'getUsers']);
+        Route::put('/users/{user}/role', [SuperAdminController::class, 'updateUserRole']);
+        Route::post('/users/{user}/promote', [SuperAdminController::class, 'promoteToAdmin']);
+        Route::post('/users/{user}/demote', [SuperAdminController::class, 'demoteAdmin']);
+        Route::get('/system/settings', [SuperAdminController::class, 'getSystemSettings']);
+        Route::get('/system/logs', [SuperAdminController::class, 'getSystemLogs']);
+    });
+
+    // User routes
+    Route::get('/reservations', [BookingController::class, 'index']);
+    Route::post('/reservations', [BookingController::class, 'store']);
+    Route::put('/reservations/{booking}', [BookingController::class, 'update']);
+    Route::delete('/reservations/{booking}', [BookingController::class, 'destroy']);
+    Route::get('/user/profile', [UserController::class, 'profile']);
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
 });

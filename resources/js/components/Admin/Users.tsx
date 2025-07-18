@@ -49,6 +49,29 @@ const colors = {
     chestnutBrown: '#4A3F35',
 };
 
+// Helper function to get role colors
+const getRoleColors = (role?: string, isAdmin?: boolean) => {
+    if (role === 'super_admin') {
+        return {
+            bgcolor: colors.discreetPoppyRed + '20',
+            color: colors.discreetPoppyRed,
+            border: colors.discreetPoppyRed + '40'
+        };
+    } else if (role === 'admin' || isAdmin) {
+        return {
+            bgcolor: colors.softSunYellow + '20',
+            color: colors.chestnutBrown,
+            border: colors.softSunYellow + '40'
+        };
+    } else {
+        return {
+            bgcolor: colors.softLavender + '20',
+            color: colors.provencalBlueGrey,
+            border: colors.softLavender + '40'
+        };
+    }
+};
+
 interface User {
     id: number;
     firstname: string;
@@ -56,6 +79,8 @@ interface User {
     email: string;
     color_preference?: string;
     is_admin: boolean;
+    role?: string;
+    role_display_name?: string;
     email_verified_at?: string;
     created_at: string;
     updated_at: string;
@@ -68,6 +93,7 @@ interface UserFormData {
     password?: string;
     password_confirmation?: string;
     is_admin: boolean;
+    role?: string;
 }
 
 const Users: React.FC = () => {
@@ -85,7 +111,8 @@ const Users: React.FC = () => {
         email: '',
         password: '',
         password_confirmation: '',
-        is_admin: false
+        is_admin: false,
+        role: 'user'
     });
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -124,7 +151,8 @@ const Users: React.FC = () => {
                 firstname: user.firstname,
                 lastname: user.lastname,
                 email: user.email,
-                is_admin: user.is_admin
+                is_admin: user.is_admin,
+                role: user.role || (user.is_admin ? 'admin' : 'user')
             });
         } else {
             setEditingUser(null);
@@ -134,7 +162,8 @@ const Users: React.FC = () => {
                 email: '',
                 password: '',
                 password_confirmation: '',
-                is_admin: false
+                is_admin: false,
+                role: 'user'
             });
         }
         setDialogOpen(true);
@@ -149,7 +178,8 @@ const Users: React.FC = () => {
             email: '',
             password: '',
             password_confirmation: '',
-            is_admin: false
+            is_admin: false,
+            role: 'user'
         });
     };
 
@@ -370,12 +400,15 @@ const Users: React.FC = () => {
                                     <TableCell>{user.email}</TableCell>
                                     <TableCell>
                                         <Chip
-                                            label={user.is_admin ? 'Administrateur' : 'Utilisateur'}
+                                            label={user.role_display_name || (user.is_admin ? 'Administrateur' : 'Utilisateur')}
                                             size="small"
                                             sx={{
-                                                bgcolor: user.is_admin ? colors.softSunYellow + '20' : colors.softLavender + '20',
-                                                color: user.is_admin ? colors.chestnutBrown : colors.provencalBlueGrey,
-                                                fontWeight: 600
+                                                ...getRoleColors(user.role, user.is_admin),
+                                                fontWeight: 600,
+                                                border: getRoleColors(user.role, user.is_admin).border,
+                                                '& .MuiChip-label': {
+                                                    fontWeight: 600
+                                                }
                                             }}
                                         />
                                     </TableCell>
@@ -517,6 +550,18 @@ const Users: React.FC = () => {
                             }
                             label="Administrateur"
                         />
+                        <TextField
+                            select
+                            label="Rôle"
+                            value={formData.role}
+                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                            fullWidth
+                            disabled={!formData.is_admin}
+                        >
+                            <MenuItem value="user">Utilisateur</MenuItem>
+                            <MenuItem value="admin">Administrateur</MenuItem>
+                            <MenuItem value="super_admin">Super Administrateur</MenuItem>
+                        </TextField>
                     </Box>
                 </DialogContent>
                 <DialogActions>
