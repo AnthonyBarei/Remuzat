@@ -1,4 +1,4 @@
-// Ract
+// React
 import * as React from 'react';
 import { useLocation, useNavigate, Link } from "react-router-dom";
 // MUI
@@ -8,26 +8,19 @@ import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Button from '@mui/material/Button';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { useTheme } from '@mui/material/styles';
-//Components
+import { useTheme as useMuiTheme } from '@mui/material/styles';
+// Components
 import LogoutButton from './LogoutButton';
 // Auth
 import { useAuth } from '../../../context/hooks/useAuth';
-// Theme
-import { ColorModeContext } from '../../../context/theme';
 
-const pagesUser = {'Players': '/players'};
-const pagesAdmin = {'Players': '/players', 'Users': '/users'};
-const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
+const pagesUser = {'Réservations': '/reservation'};
+const pagesAdmin = {'Réservations': '/reservation', 'Utilisateurs': '/users'};
 
 const ResponsiveAppBar = (props) => {
     // Theme
-    const theme = useTheme();
-    const colorMode = React.useContext(ColorModeContext);
-    const lightAppBar = { backgroundColor: "white", color: "#666666", zIndex: (theme) => theme.zIndex.drawer + 1, };
-    const darkAppBar = { zIndex: (theme) => theme.zIndex.drawer + 1, }
+    const muiTheme = useMuiTheme();
+    
     // Nav
     const location = useLocation();
     const navigate = useNavigate();
@@ -58,48 +51,64 @@ const ResponsiveAppBar = (props) => {
     };
 
     return (
-        <AppBar position="fixed" sx={theme.palette.mode === 'light' ? lightAppBar : darkAppBar}>
-        <Toolbar sx={{display: 'flex', justifyContent: 'space-between'}}>
-            <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                edge="start"
-                onClick={props.handleDrawerToggle}
-                sx={{ mr: 2, display: { sm: 'none' } }}
-            >
-                <MenuIcon />
-            </IconButton>
-
-            {theme.palette.mode === 'light' ? (
-                <Box component="img" sx={{ height: 50, mr: 10, cursor: 'pointer'}} alt="Logo" src="/images/M-Broadcast-Dark-HD.png" onClick={handleLogoClick}/>
-            ) : (
-                <Box component="img" sx={{ height: 50, mr: 10, cursor: 'pointer'}} alt="Logo" src="/images/M-Broadcast-White-HD.png" onClick={handleLogoClick}/>
-            )}
-
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
-                {Object.entries(pages).map(([name, link]) => (
-                <Button
-                    component={Link}
-                    to={link}
-                    key={name}
-                    onClick={handleCloseNavMenu}
-                    sx={{ my: 2, color: 'text.secondary', display: 'block' }}
+        <AppBar position="fixed" sx={{ 
+            zIndex: (theme) => theme.zIndex.drawer + 1,
+            backgroundColor: 'white',
+            color: 'text.primary',
+            boxShadow: '0 2px 20px rgba(0,0,0,0.1)'
+        }}>
+            <Toolbar sx={{display: 'flex', justifyContent: 'space-between'}}>
+                <IconButton
+                    color="inherit"
+                    aria-label="open drawer"
+                    edge="start"
+                    onClick={props.handleDrawerToggle}
+                    sx={{ mr: 2, display: { sm: 'none' } }}
                 >
-                    {name}
-                </Button>
-                ))}
-            </Box>
-
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <IconButton sx={{ ml: 1 }} onClick={colorMode.toggleColorMode} color="inherit">
-                    {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                    <MenuIcon />
                 </IconButton>
 
-                <LogoutButton/>
-            </Box>
+                <Box sx={{ 
+                    fontWeight: 700, 
+                    fontSize: 24, 
+                    color: 'text.primary', 
+                    letterSpacing: 1, 
+                    cursor: 'pointer', 
+                    mr: 6 
+                }} onClick={handleLogoClick}>
+                    Remuzat
+                </Box>
 
-        </Toolbar>
-      </AppBar>
+                <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+                    {Object.entries(pages).map(([name, link]) => (
+                        <Button
+                            component={Link}
+                            to={link}
+                            key={name}
+                            onClick={handleCloseNavMenu}
+                            sx={{
+                                my: 2,
+                                color: 'text.secondary',
+                                fontWeight: 600,
+                                display: 'block',
+                                borderRadius: 2,
+                                mx: 1,
+                                '&:hover': {
+                                    bgcolor: 'primary.main',
+                                    color: 'primary.contrastText'
+                                }
+                            }}
+                        >
+                            {name}
+                        </Button>
+                    ))}
+                </Box>
+
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <LogoutButton label="Déconnexion" />
+                </Box>
+            </Toolbar>
+        </AppBar>
     );
 };
 export default ResponsiveAppBar;

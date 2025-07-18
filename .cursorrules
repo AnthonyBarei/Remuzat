@@ -30,6 +30,8 @@ This is a Laravel 9 + React + TypeScript booking system for a beautiful village 
 - Use async/await for API calls
 - Implement proper form validation
 - Use React Context for global state management (auth, theme)
+- Display error messages in modals and forms
+- Handle overlap warnings and admin notifications
 
 ### File Structure
 ```
@@ -55,7 +57,12 @@ resources/js/
 - Users can only create, view, and cancel their own bookings
 - Admins can manage all bookings (approve, modify, delete)
 - Bookings have states: pending, approved, cancelled
-- No overlapping bookings allowed
+- **Smart Overlap Management**:
+  - Users cannot overlap their own reservations
+  - Users can overlap other users' reservations (requires admin validation)
+  - Overlapping bookings are marked as "pending" for admin review
+  - Visual indicators show overlapping bookings in admin interface
+  - Admin warnings include specific user names for overlaps
 - Currently only supports "booking" type (holidays)
 - Multi-day bookings are supported with visual indicators
 - Bookings appear immediately after creation
@@ -63,8 +70,10 @@ resources/js/
 ### User Management
 - Users can customize their color preference
 - Users can access account parameters
-- Admin users have special privileges
+- Admin users have special privileges with policy-based authorization
 - Authentication uses Laravel Sanctum
+- Admins can authorize users, delete users, and resend validation emails
+- User email verification status is tracked and displayed
 
 ### UI/UX Guidelines
 - Use consistent color scheme based on user preferences
@@ -77,29 +86,45 @@ resources/js/
 
 ### Routing Structure
 - `/` - Landing page (public)
-- `/booking` - Booking system (protected)
-- `/login` - Login page (redirects to /booking after auth)
-- `/signup` - Registration page (redirects to /booking after auth)
+- `/reservation` - Booking system (protected)
+- `/admin` - Admin panel (protected, admin only)
+- `/login` - Login page (redirects to /reservation after auth)
+- `/signup` - Registration page (redirects to /reservation after auth)
 
 ## API Endpoints
-- `GET /api/bookings` - List user's bookings (with week filtering)
-- `POST /api/bookings` - Create booking
-- `PUT /api/bookings/{id}` - Update booking
-- `DELETE /api/bookings/{id}` - Cancel booking
+
+### User Endpoints
+- `GET /api/reservations` - List user's bookings (with week filtering)
+- `POST /api/reservations` - Create booking
+- `PUT /api/reservations/{id}` - Update booking
+- `DELETE /api/reservations/{id}` - Cancel booking
 - `GET /api/user/profile` - Get user profile
 - `PUT /api/user/profile` - Update user profile
 - `POST /api/register` - User registration
 - `POST /api/login` - User login
 - `POST /api/logout` - User logout
 
+### Admin Endpoints
+- `GET /api/admin/reservations` - List all bookings (with filtering, pagination, overlap detection)
+- `PUT /api/admin/reservations/{id}` - Admin update booking (with overlap warnings)
+- `POST /api/admin/reservations/{id}/approve` - Approve booking
+- `POST /api/admin/reservations/{id}/reject` - Reject booking
+- `GET /api/admin/reservations/statistics` - Get booking statistics
+- `GET /api/users` - List all users
+- `PUT /api/users/{id}` - Update user
+- `DELETE /api/users/{id}` - Delete user
+- `POST /api/users/{id}/authorize` - Authorize user
+- `POST /api/users/{id}/resend-validation` - Resend validation email
+
 ## Security
 - All booking endpoints require authentication
 - Users can only access their own data
-- Admins can access all data
+- Admins can access all data with policy-based authorization
 - Validate all input data
 - Use CSRF protection for web routes
 - Use Sanctum tokens for API authentication
-- Proper authorization checks in controllers
+- Proper authorization checks in controllers and policies
+- Admin routes protected by AdminPolicy middleware
 
 ## Performance
 - Use eager loading for relationships
@@ -137,12 +162,28 @@ resources/js/
 - ✅ User color preferences
 - ✅ Responsive design
 - ✅ Loading states and error handling
+- ✅ **Complete Admin Panel**:
+  - User management (view, edit, delete, authorize, resend validation)
+  - Reservation management (view, edit, approve, reject)
+  - Statistics dashboard
+  - Advanced filtering and pagination
+- ✅ **Smart Overlap Management**:
+  - Users cannot overlap their own reservations
+  - Users can overlap other users' reservations (admin validation required)
+  - Visual overlap indicators in admin interface
+  - Admin warnings with specific user names
+  - Overlap filtering options
+- ✅ **Policy-based Authorization**:
+  - AdminPolicy for booking and user management
+  - AdminPolicyMiddleware for route protection
+  - Granular permissions for different admin actions
 
 ## Future Enhancements
-- Admin panel for booking management
 - Additional booking types (meetings, vacations)
 - Email notifications
-- Booking approval workflow
 - Advanced filtering and search
 - Calendar export functionality
-- Payment integration 
+- Payment integration
+- Booking analytics and reporting
+- Bulk operations for admin
+- Email templates for notifications 

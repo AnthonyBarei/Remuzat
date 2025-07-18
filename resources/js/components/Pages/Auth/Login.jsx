@@ -16,7 +16,7 @@ export default function Login({authenticate}) {
     const [alert, setAlert] = React.useState(false);
 
     const authenticatedCallback = () => {
-        let {from} = location.state || {from: {pathname: '/booking'}}
+        let {from} = location.state || {from: {pathname: '/reservation'}}
         navigate(from, { replace: true });
     }
 

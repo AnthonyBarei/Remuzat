@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Alert, Box } from '@mui/material';
 import Navigation from './BookingNavigation';
 import BookingTable from './BookingTable';
 import MainLayout from '../Layouts/Main';
@@ -22,31 +23,22 @@ const Booking: React.FC = () => {
     const getBookings = async () => {
         setLoading(true);
         setError(null);
-        
         try {
-            // Get the start and end dates of the current week
-            // Convert from DD/MM/YYYY to YYYY-MM-DD format
             const weekStartParts = currentWeek[0].ddmmyyyy.split('/');
             const weekEndParts = currentWeek[6].ddmmyyyy.split('/');
-            
             const weekStart = `${weekStartParts[2]}-${weekStartParts[1].padStart(2, '0')}-${weekStartParts[0].padStart(2, '0')}`;
             const weekEnd = `${weekEndParts[2]}-${weekEndParts[1].padStart(2, '0')}-${weekEndParts[0].padStart(2, '0')}`;
-            
-
-            
-            const response = await window.axios.get('/api/bookings', {
+            const response = await window.axios.get('/api/reservations', {
                 params: {
                     start_date: weekStart,
                     end_date: weekEnd
                 }
             });
-            
             if (response.data.success) {
-                // Transform API data to match frontend interface
                 const transformedBookings: BookingInfo[] = response.data.data.map((booking: any) => ({
                     id: booking.id,
-                    start: booking.start.split(' ')[0], // Extract date part only
-                    end: booking.end.split(' ')[0], // Extract date part only
+                    start: booking.start.split(' ')[0],
+                    end: booking.end.split(' ')[0],
                     start_day: booking.start_day,
                     end_day: booking.end_day,
                     gap: booking.gap,
@@ -57,14 +49,13 @@ const Booking: React.FC = () => {
                     validated_by: booking.validated_by,
                     user: booking.user
                 }));
-                
                 setBookings(transformedBookings);
             } else {
-                setError('Failed to fetch bookings');
+                setError('Impossible de récupérer les réservations.');
             }
         } catch (error: any) {
-            console.error('Error fetching bookings:', error);
-            setError(error.response?.data?.message || 'Failed to fetch bookings');
+            console.error('Erreur lors de la récupération des réservations :', error);
+            setError(error.response?.data?.message || 'Impossible de récupérer les réservations.');
         } finally {
             setLoading(false);
         }
@@ -90,7 +81,6 @@ const Booking: React.FC = () => {
     };
 
     const onBookingCreated = () => {
-        // Refresh bookings after a new booking is created
         getBookings();
         setDisplayBookingForm(false);
     };
@@ -109,9 +99,11 @@ const Booking: React.FC = () => {
                 <BookingAddForm onBookingCreated={onBookingCreated} />
             )}
             {error && (
-                <div style={{ color: 'red', marginBottom: '1rem' }}>
-                    {error}
-                </div>
+                <Box sx={{ mb: 2 }}>
+                    <Alert severity="error" sx={{ fontWeight: 600 }}>
+                        {error}
+                    </Alert>
+                </Box>
             )}
             <BookingTable 
                 week={currentWeek} 

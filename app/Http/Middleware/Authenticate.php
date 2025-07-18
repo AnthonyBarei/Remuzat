@@ -14,8 +14,10 @@ class Authenticate extends Middleware
      */
     protected function redirectTo($request)
     {
+        // For SPA, we don't redirect to a login route
+        // The frontend will handle authentication redirects
         if (! $request->expectsJson()) {
-            return route('login');
+            return null;
         }
     }
 }

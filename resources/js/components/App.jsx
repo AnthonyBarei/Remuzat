@@ -10,6 +10,7 @@ import Login from './Pages/Auth/Login';
 import SignUp from './Pages/Auth/SignUp';
 import Booking from './Booking/Booking';
 import Landing from './Pages/Landing';
+import Admin from './Admin/Admin';
 // Routes
 import { PrivateRoutes } from './Routes/ProtectedRoutes';
 // Auth
@@ -26,8 +27,9 @@ const App = () => {
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/signup" element={<SignUp/>}/>
                     <Route element={<PrivateRoutes/>}>
-                        <Route path="/booking" element={<Booking/>}></Route>
+                        <Route path="/reservation" element={<Booking/>}></Route>
                     </Route>
+                    <Route path="/admin/*" element={<Admin/>}/>
                 </Routes>
             ) : (
                 <Loading/>

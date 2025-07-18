@@ -14,7 +14,11 @@ A beautiful booking system for the village of Remuzat, built with Laravel 9 and 
 - **Multi-day Bookings**: Support for extended stays with visual indicators
 - **Booking Types**: Currently supports holiday bookings (expandable to meetings/vacations)
 - **Status Management**: Pending, approved, and cancelled booking states
-- **Overlap Prevention**: Automatic validation to prevent double bookings
+- **Smart Overlap Management**: 
+  - Users cannot overlap their own reservations
+  - Users can overlap other users' reservations (requires admin validation)
+  - Visual indicators for overlapping bookings
+  - Admin warnings with specific user names
 - **Real-time Updates**: Immediate UI updates after booking creation
 
 ### User Experience
@@ -27,9 +31,10 @@ A beautiful booking system for the village of Remuzat, built with Laravel 9 and 
 ### Authentication & Security
 - **Laravel Sanctum**: Secure API authentication
 - **User Registration/Login**: Complete authentication flow
-- **Role-based Access**: User and admin permissions
+- **Role-based Access**: User and admin permissions with policy-based authorization
 - **CSRF Protection**: Built-in security measures
 - **Input Validation**: Comprehensive data validation
+- **Admin Panel**: Complete admin interface for user and booking management
 
 ### Landing Page
 - **Beautiful Hero Section**: Showcasing the village of Remuzat
@@ -125,10 +130,17 @@ npm run build
 
 ### For Users
 1. Visit the landing page to learn about Remuzat
-2. Navigate to `/booking` to access the booking system
+2. Navigate to `/reservation` to access the booking system
 3. Register or login to your account
 4. Use the calendar interface to create bookings
 5. View and manage your existing bookings
+
+### For Admins
+1. Access the admin panel at `/admin`
+2. View all reservations with filtering and statistics
+3. Approve, reject, or modify bookings
+4. Manage users (authorize, delete, resend validation emails)
+5. Monitor overlapping bookings with visual indicators
 
 ### For Developers
 - API documentation available at `/api` endpoints
@@ -144,10 +156,22 @@ npm run build
 - `POST /api/logout` - User logout
 
 ### Bookings
-- `GET /api/bookings` - List user's bookings
-- `POST /api/bookings` - Create new booking
-- `PUT /api/bookings/{id}` - Update booking
-- `DELETE /api/bookings/{id}` - Cancel booking
+- `GET /api/reservations` - List user's bookings
+- `POST /api/reservations` - Create new booking
+- `PUT /api/reservations/{id}` - Update booking
+- `DELETE /api/reservations/{id}` - Cancel booking
+
+### Admin Endpoints
+- `GET /api/admin/reservations` - List all bookings with filtering and pagination
+- `PUT /api/admin/reservations/{id}` - Admin update booking
+- `POST /api/admin/reservations/{id}/approve` - Approve booking
+- `POST /api/admin/reservations/{id}/reject` - Reject booking
+- `GET /api/admin/reservations/statistics` - Get booking statistics
+- `GET /api/users` - List all users
+- `PUT /api/users/{id}` - Update user
+- `DELETE /api/users/{id}` - Delete user
+- `POST /api/users/{id}/authorize` - Authorize user
+- `POST /api/users/{id}/resend-validation` - Resend validation email
 
 ### User Profile
 - `GET /api/user/profile` - Get user profile

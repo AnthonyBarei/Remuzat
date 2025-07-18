@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'color_preference',
         'is_admin',
+        'email_verified_at',
     ];
 
     /**
@@ -45,4 +46,42 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_admin' => 'boolean',
     ];
+
+    /**
+     * Get the bookings for the user.
+     */
+    public function bookings()
+    {
+        return $this->hasMany(Booking::class, 'added_by');
+    }
+
+    /**
+     * Check if the user is an admin.
+     *
+     * @return bool
+     */
+    public function isAdmin()
+    {
+        return $this->is_admin;
+    }
+
+    /**
+     * Check if the user can access admin functionality.
+     *
+     * @return bool
+     */
+    public function canAccessAdmin()
+    {
+        return $this->is_admin;
+    }
+
+    /**
+     * Get the user's full name.
+     *
+     * @return string
+     */
+    public function getNameAttribute()
+    {
+        return $this->firstname . ' ' . $this->lastname;
+    }
 }

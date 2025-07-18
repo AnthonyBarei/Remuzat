@@ -6,6 +6,8 @@ use App\Models\Booking;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 
 class BookingController extends BaseController
 {
@@ -75,18 +77,36 @@ class BookingController extends BaseController
             $start = date('Y-m-d 00:00:00', strtotime($request->input('start_date')));
             $end = date('Y-m-d 23:59:59', strtotime($request->input('end_date')));
 
-            // Check for overlapping bookings
-            $overlapping = Booking::where(function($query) use ($start, $end) {
-                $query->whereBetween('start', [$start, $end])
-                      ->orWhereBetween('end', [$start, $end])
-                      ->orWhere(function($q) use ($start, $end) {
-                          $q->where('start', '<=', $start)
-                            ->where('end', '>=', $end);
-                      });
-            })->exists();
+            // get the user id of the user who added the booking
+            $added_by = Auth::user()->id;
 
-            if ($overlapping) {
-                return $this->sendError('Booking overlaps with existing booking.', [], 422);
+            // Check for overlapping bookings
+            $overlapping = Booking::where('status', '!=', 'cancelled') // Don't check against cancelled bookings
+                ->where(function($query) use ($start, $end) {
+                    $query->whereBetween('start', [$start, $end])
+                          ->orWhereBetween('end', [$start, $end])
+                          ->orWhere(function($q) use ($start, $end) {
+                              $q->where('start', '<=', $start)
+                                ->where('end', '>=', $end);
+                          });
+                })->get();
+
+            if ($overlapping->isNotEmpty()) {
+                // Check if any overlapping bookings are from the same user
+                $sameUserOverlap = $overlapping->where('added_by', $added_by)->first();
+                if ($sameUserOverlap) {
+                    return $this->sendError('Vous ne pouvez pas créer une réservation qui chevauche vos propres réservations.', [], 422);
+                }
+
+                // If overlapping with other users, allow but warn admin
+                $overlappingUsers = $overlapping->map(function($booking) {
+                    return $booking->user->firstname . ' ' . $booking->user->lastname;
+                })->implode(', ');
+
+                // Set status to pending for admin validation
+                $status = 'pending';
+            } else {
+                $status = 'pending';
             }
 
             // get the day number of start date (1=Monday, 7=Sunday)
@@ -101,9 +121,6 @@ class BookingController extends BaseController
 
             $type = $request->input('type');
 
-            // get the user id of the user who added the booking
-            $added_by = Auth::user()->id;
-
             $booking = new Booking;
             $booking->start = $start;
             $booking->end = $end;
@@ -112,12 +129,22 @@ class BookingController extends BaseController
             $booking->gap = $gap;
             $booking->duration = $duration;
             $booking->type = $type;
-            $booking->status = 'pending';
+            $booking->status = $status;
             $booking->added_by = $added_by;
             $booking->save();
 
             // Load relationships for response
             $booking->load(['user', 'validatedBy']);
+
+            // Check if there was an overlap warning
+            if ($overlapping->isNotEmpty()) {
+                return $this->sendResponse([
+                    'booking' => $booking,
+                    'overlap_warning' => true,
+                    'overlapping_users' => $overlappingUsers,
+                    'message' => 'Attention: Cette réservation chevauche les réservations de: ' . $overlappingUsers . '. La réservation sera en attente de validation.'
+                ], 'Réservation créée avec chevauchement détecté.');
+            }
 
             // return successful response
             return $this->sendResponse($booking, 'Booking created successfully.');
@@ -233,9 +260,9 @@ class BookingController extends BaseController
                 return $this->sendError('Unauthorized to cancel this booking.', [], 403);
             }
 
-            // Only allow cancellation of pending bookings
-            if ($booking->status !== 'pending') {
-                return $this->sendError('Only pending bookings can be cancelled.', [], 422);
+            // Allow cancellation of pending and approved bookings
+            if (!in_array($booking->status, ['pending', 'approved'])) {
+                return $this->sendError('Only pending or approved bookings can be cancelled.', [], 422);
             }
 
             $booking->status = 'cancelled';
@@ -245,6 +272,261 @@ class BookingController extends BaseController
             return $this->sendResponse($booking, 'Booking cancelled successfully.');
         } catch (\Exception $e) {
             return $this->sendError('Booking cancellation failed.', [], 500);
+        }
+    }
+
+    /**
+     * Update the specified resource in storage (admin version).
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Booking  $booking
+     * @return \Illuminate\Http\Response
+     */
+    public function adminUpdate(Request $request, Booking $booking)
+    {
+        if (Gate::denies('update', $booking)) {
+            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+        }
+
+        // validate incoming request
+        $this->validate($request, [
+            'start_date' => 'sometimes|required|string',
+            'end_date' => 'sometimes|required|string|after_or_equal:start_date',
+            'type' => 'sometimes|required|string|in:booking',
+            'status' => 'sometimes|required|string|in:pending,approved,cancelled',
+        ]);
+
+        try {
+            $updateData = [];
+
+            if ($request->has('start_date')) {
+                $start = date('Y-m-d 00:00:00', strtotime($request->input('start_date')));
+                $updateData['start'] = $start;
+                $updateData['start_day'] = date('N', strtotime($start));
+            }
+
+            if ($request->has('end_date')) {
+                $end = date('Y-m-d 23:59:59', strtotime($request->input('end_date')));
+                $updateData['end'] = $end;
+                $updateData['end_day'] = date('N', strtotime($end));
+                $updateData['gap'] = 7 - date('N', strtotime($end));
+            }
+
+            if ($request->has('start_date') || $request->has('end_date')) {
+                $start = $updateData['start'] ?? $booking->start;
+                $end = $updateData['end'] ?? $booking->end;
+                $updateData['duration'] = floor((strtotime($end) - strtotime($start)) / (60 * 60 * 24)) + 1;
+            }
+
+            if ($request->has('type')) {
+                $updateData['type'] = $request->input('type');
+            }
+
+            if ($request->has('status')) {
+                $updateData['status'] = $request->input('status');
+                // If status is being changed to approved, set validated_by
+                if ($request->input('status') === 'approved' && $booking->status !== 'approved') {
+                    $updateData['validated_by'] = Auth::user()->id;
+                }
+            }
+
+            // Check for overlapping bookings (excluding current booking)
+            if (isset($updateData['start']) || isset($updateData['end'])) {
+                $start = $updateData['start'] ?? $booking->start;
+                $end = $updateData['end'] ?? $booking->end;
+                
+                $overlapping = Booking::where('id', '!=', $booking->id)
+                    ->where('status', '!=', 'cancelled') // Don't check against cancelled bookings
+                    ->where(function($query) use ($start, $end) {
+                        $query->whereBetween('start', [$start, $end])
+                              ->orWhereBetween('end', [$start, $end])
+                              ->orWhere(function($q) use ($start, $end) {
+                                  $q->where('start', '<=', $start)
+                                    ->where('end', '>=', $end);
+                              });
+                    })->get();
+
+                if ($overlapping->isNotEmpty()) {
+                    // Check if any overlapping bookings are from the same user
+                    $sameUserOverlap = $overlapping->where('added_by', $booking->added_by)->first();
+                    if ($sameUserOverlap) {
+                        return $this->sendError('Vous ne pouvez pas créer une réservation qui chevauche vos propres réservations.', [], 422);
+                    }
+
+                    // If overlapping with other users, allow but warn admin
+                    $overlappingUsers = $overlapping->map(function($booking) {
+                        return $booking->user->firstname . ' ' . $booking->user->lastname;
+                    })->implode(', ');
+
+                    return $this->sendResponse([
+                        'booking' => $booking,
+                        'overlap_warning' => true,
+                        'overlapping_users' => $overlappingUsers,
+                        'message' => 'Attention: Cette réservation chevauche les réservations de: ' . $overlappingUsers . '. La réservation sera en attente de validation.'
+                    ], 'Réservation modifiée avec chevauchement détecté.');
+                }
+            }
+
+            $booking->update($updateData);
+            $booking->load(['user', 'validatedBy']);
+
+            return $this->sendResponse($booking, 'Réservation modifiée avec succès.');
+        } catch (\Exception $e) {
+            return $this->sendError('Booking update failed.', [], 500);
+        }
+    }
+
+    /**
+     * Get all reservations for admin panel with filtering and pagination.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function adminIndex(Request $request)
+    {
+        if (Gate::denies('viewAny', Booking::class)) {
+            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+        }
+
+        try {
+            $query = Booking::with(['user', 'validatedBy']);
+
+            // Filter by status
+            if ($request->has('status') && $request->input('status') !== '') {
+                $query->where('status', $request->input('status'));
+            }
+
+            // Filter by search term (guest name or email)
+            if ($request->has('search') && $request->input('search') !== '') {
+                $search = $request->input('search');
+                $query->whereHas('user', function($q) use ($search) {
+                    $q->where('firstname', 'like', "%{$search}%")
+                      ->orWhere('lastname', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%");
+                });
+            }
+
+            // Filter by date range
+            if ($request->has('start_date') && $request->input('start_date')) {
+                $query->where('start', '>=', $request->input('start_date') . ' 00:00:00');
+            }
+
+            if ($request->has('end_date') && $request->input('end_date')) {
+                $query->where('end', '<=', $request->input('end_date') . ' 23:59:59');
+            }
+
+            // Get paginated results
+            $perPage = $request->input('per_page', 10);
+            $bookings = $query->orderBy('created_at', 'desc')->paginate($perPage);
+
+            // Check for overlaps for each booking
+            $bookings->getCollection()->transform(function ($booking) {
+                $overlapping = Booking::where('id', '!=', $booking->id)
+                    ->where('status', '!=', 'cancelled')
+                    ->where(function($query) use ($booking) {
+                        $query->whereBetween('start', [$booking->start, $booking->end])
+                              ->orWhereBetween('end', [$booking->start, $booking->end])
+                              ->orWhere(function($q) use ($booking) {
+                                  $q->where('start', '<=', $booking->start)
+                                    ->where('end', '>=', $booking->end);
+                              });
+                    })->exists();
+
+                $booking->has_overlap = $overlapping;
+                return $booking;
+            });
+
+            // Filter by overlaps if requested
+            if ($request->has('show_overlaps') && $request->input('show_overlaps') === 'true') {
+                $bookings->setCollection($bookings->getCollection()->filter(function ($booking) {
+                    return $booking->has_overlap;
+                }));
+            }
+
+            return $this->sendResponse($bookings, 'Reservations retrieved successfully.');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve reservations.', [], 500);
+        }
+    }
+
+    /**
+     * Approve a reservation (admin only).
+     *
+     * @param  \App\Models\Booking  $booking
+     * @return \Illuminate\Http\Response
+     */
+    public function approve(Booking $booking)
+    {
+        if (Gate::denies('update', $booking)) {
+            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+        }
+
+        try {
+            if ($booking->status !== 'pending') {
+                return $this->sendError('Only pending reservations can be approved.', [], 422);
+            }
+
+            $booking->status = 'approved';
+            $booking->validated_by = Auth::user()->id;
+            $booking->save();
+
+            $booking->load(['user', 'validatedBy']);
+            return $this->sendResponse($booking, 'Reservation approuvée avec succès.');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to approve reservation.', [], 500);
+        }
+    }
+
+    /**
+     * Reject a reservation (admin only).
+     *
+     * @param  \App\Models\Booking  $booking
+     * @return \Illuminate\Http\Response
+     */
+    public function reject(Booking $booking)
+    {
+        if (Gate::denies('update', $booking)) {
+            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+        }
+
+        try {
+            if ($booking->status !== 'pending') {
+                return $this->sendError('Only pending reservations can be rejected.', [], 422);
+            }
+
+            $booking->status = 'cancelled';
+            $booking->validated_by = Auth::user()->id;
+            $booking->save();
+
+            $booking->load(['user', 'validatedBy']);
+            return $this->sendResponse($booking, 'Reservation rejetée avec succès.');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to reject reservation.', [], 500);
+        }
+    }
+
+    /**
+     * Get reservation statistics for admin dashboard.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function statistics()
+    {
+        if (Gate::denies('viewAny', Booking::class)) {
+            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+        }
+
+        try {
+            $stats = [
+                'pending' => Booking::where('status', 'pending')->count(),
+                'approved' => Booking::where('status', 'approved')->count(),
+                'cancelled' => Booking::where('status', 'cancelled')->count(),
+                'total' => Booking::count(),
+            ];
+
+            return $this->sendResponse($stats, 'Statistics retrieved successfully.');
+        } catch (\Exception $e) {
+            return $this->sendError('Failed to retrieve statistics.', [], 500);
         }
     }
 }
