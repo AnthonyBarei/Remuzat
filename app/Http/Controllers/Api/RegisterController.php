@@ -25,7 +25,7 @@ class RegisterController extends BaseController
         ]);
 
         if ($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());
+            return $this->sendError('Erreur de validation.', $validator->errors());
         }
 
         $input = $request->all();
@@ -40,6 +40,6 @@ class RegisterController extends BaseController
         $success['email'] = $user->email;
         $success['is_admin'] = $user->is_admin;
 
-        return $this->sendResponse($success, 'User register successfully.');
+        return $this->sendResponse($success, 'Utilisateur enregistré avec succès.');
     }
 }

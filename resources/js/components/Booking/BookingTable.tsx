@@ -3,13 +3,9 @@ import { Box, Typography, IconButton, Tooltip, CircularProgress, Paper, Dialog, 
 import Grid from '@mui/material/Grid';
 import { useTheme } from '@mui/material/styles';
 import moment from 'moment';
-import 'moment/locale/fr';
 
 import { BookingInfo, BookingDetails, WeekInfo, GapDetails } from './interfaces';
 import { useAuth } from '../../context/hooks/useAuth';
-
-// Set French locale for moment
-moment.locale('fr');
 
 interface BookingTableProps {
     week: WeekInfo[];
@@ -25,9 +21,10 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
     const [selectedBooking, setSelectedBooking] = useState<BookingDetails | null>(null);
     const [actionDialogOpen, setActionDialogOpen] = useState(false);
 
-    useEffect(() => {
+    // Recalculate booking details when week or bookings change
+    React.useEffect(() => {
         generateBookingDetails();
-    }, [props.bookings]);
+    }, [props.week, props.bookings]);
 
     // Check if current user can modify this booking
     const canModifyBooking = (booking: BookingDetails): boolean => {
@@ -52,58 +49,57 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
         const detailedBookings: (BookingDetails|GapDetails)[] = [];
 
         props.bookings.forEach((booking, bookingIndex) => {
-            // condition to check if booking is in the same week using week state
+            // Get the week boundaries (Monday to Sunday)
             const weekStart = moment(props.week[0].ddmmyyyy, "DD/MM/YYYY").startOf('isoWeek');
             const weekEnd = moment(props.week[0].ddmmyyyy, "DD/MM/YYYY").endOf('isoWeek');
-            const bookingStart = moment(booking.start, "YYYY-MM-DD");
-            const bookingEnd = moment(booking.end, "YYYY-MM-DD").set({hour: 23, minute: 59, second: 59, millisecond: 999});
             
-            // Check if booking overlaps with current week
+            // Parse booking dates
+            const bookingStart = moment(booking.start, "YYYY-MM-DD");
+            const bookingEnd = moment(booking.end, "YYYY-MM-DD");
+            
+            // Skip bookings that don't overlap with current week
             if (bookingEnd.isBefore(weekStart) || bookingStart.isAfter(weekEnd)) {
                 return;
             }
 
-            let start: string = booking.start;
-            let end: string = booking.end;
-            let duration: number = booking.duration;            
-            let size: string = duration / 7 * 100 + '%';
+            // Calculate visible portion of booking within the week
+            // This ensures bookings that start before or end after the week are properly clipped
+            const visibleStart = bookingStart.isBefore(weekStart) ? weekStart : bookingStart;
+            const visibleEnd = bookingEnd.isAfter(weekEnd) ? weekEnd : bookingEnd;
             
-            // Calculate margin_left based on actual date difference from week start
-            // instead of using start_day which is day-of-year
-            const daysFromWeekStart = bookingStart.diff(weekStart, 'days');
-            let margin_left: string = Math.max(0, daysFromWeekStart) / 7 * 100 + '%';
+            // Calculate visible duration in days (inclusive)
+            const visibleDuration = visibleEnd.diff(visibleStart, 'days') + 1;
             
-            let bookingMode: boolean = false;
-            let isEndOutOfWeek: boolean = false;
-            let isStartOutOfWeek: boolean = false;            
+            // Calculate position and size as percentages of the week width
+            // marginLeft: how far from the left edge of the week (0% = Monday, 100% = Sunday)
+            // size: how much of the week width the booking occupies
+            const daysFromWeekStart = visibleStart.diff(weekStart, 'days');
+            const marginLeft = (daysFromWeekStart / 7) * 100;
+            const size = (visibleDuration / 7) * 100;
+            
+            // Determine if booking extends beyond week boundaries for visual indicators
+            const isStartOutOfWeek = bookingStart.isBefore(weekStart);
+            const isEndOutOfWeek = bookingEnd.isAfter(weekEnd);
 
-            // Adjust for bookings that start before the current week
-            if (bookingStart.isBefore(weekStart)) {
-                const daysInWeek = bookingEnd.diff(weekStart, 'days') + 1;
-                duration = Math.min(daysInWeek, 7); // Max 7 days for display
-                size = duration / 7 * 100 + '%';
-                margin_left = 0 + '%';
-                isStartOutOfWeek = true;
-            }
-
-            // Check if booking extends beyond current week
-            if (bookingEnd.isAfter(weekEnd)) {
-                isEndOutOfWeek = true;
-                const daysInWeek = weekEnd.diff(bookingStart.isBefore(weekStart) ? weekStart : bookingStart, 'days') + 1;
-                duration = Math.min(daysInWeek, 7);
-                size = duration / 7 * 100 + '%';
-            }
+            // Debug logging for verification
+            console.log(`Booking ${booking.id}:`, {
+                original: { start: booking.start, end: booking.end, duration: booking.duration },
+                visible: { start: visibleStart.format('YYYY-MM-DD'), end: visibleEnd.format('YYYY-MM-DD'), duration: visibleDuration },
+                position: { marginLeft: `${marginLeft}%`, size: `${size}%` },
+                weekBounds: { start: weekStart.format('YYYY-MM-DD'), end: weekEnd.format('YYYY-MM-DD') },
+                outOfWeek: { isStartOutOfWeek, isEndOutOfWeek }
+            });
 
             const details: BookingDetails = {
                 id: booking.id,
-                start: start,
-                end: end,
+                start: booking.start,
+                end: booking.end,
                 start_day: booking.start_day,
                 end_day: booking.end_day,
-                duration: duration,
-                size: size,
-                margin_left: margin_left,
-                bookingMode: bookingMode,
+                duration: visibleDuration, // Use visible duration for display
+                size: `${size}%`,
+                margin_left: `${marginLeft}%`,
+                bookingMode: false,
                 isEndOutOfWeek: isEndOutOfWeek,
                 isStartOutOfWeek: isStartOutOfWeek,
                 isGap: false,
@@ -115,18 +111,6 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
             };
 
             detailedBookings.push(details);
-
-            // Remove gap display - gaps should be invisible
-            // if (booking.gap > 0 && !bookingEnd.isSameOrAfter(weekEnd) && bookingIndex !== props.bookings.length - 1) {
-            //     const gapSize = booking.gap / 7 * 100 + '%';
-            //     
-            //     const gapDetails: GapDetails = {
-            //         gapSize: gapSize,
-            //         isGap: true,
-            //     };
-
-            //     detailedBookings.push(gapDetails);
-            // }
         });
 
         setBookingDetails(detailedBookings);
@@ -262,105 +246,224 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
 
                 <Box sx={{display: 'flex', justifyContent: 'center', position: 'relative'}}>
                     {props.week && props.week.map((day, index) => (
-                        <Box key={index} sx={{flex: 1, textAlign: 'center', borderLeft: index !== 0 ? `1px solid ${theme.palette.divider}` : ''}}>
+                        <Box key={index} sx={{
+                            flex: 1, 
+                            textAlign: 'center', 
+                            borderLeft: index !== 0 ? `1px solid ${theme.palette.divider}` : '',
+                            position: 'relative'
+                        }}>
                             <Box sx={{borderBottom: `1px solid ${theme.palette.divider}`, p: 1, bgcolor: 'paper.main'}}>
                                 <Typography variant={"body2"} sx={{textTransform: 'capitalize', fontWeight: 600, color: 'text.primary'}}>{day.day_of_the_week}</Typography>
                                 <Typography variant={"body1"} sx={{color: 'text.primary'}}>{day.day_of_the_month}</Typography>
                             </Box>
 
-                            <Box sx={{height: 500, p: 1, bgcolor: 'paper.main'}}>
-                                {/* Removed individual column loading */}
+                            <Box sx={{height: 500, p: 1, bgcolor: 'paper.main', position: 'relative'}}>
+                                {/* Individual day content can be added here if needed */}
                             </Box>
                         </Box>
                     ))}
 
-                    <Box sx={{ width: '100%', position: 'absolute', top: 70}}>
-                        <Box sx={{display: 'flex', flexWrap: 'wrap'}}>
-                            {bookingDetails.map((e, idx) => {
-                                if (e.isGap) {
-                                    // Don't render gaps - they should be invisible
-                                    return null;
+                    {/* Booking overlay positioned absolutely over the week grid */}
+                    <Box sx={{ 
+                        position: 'absolute', 
+                        top: 70, 
+                        left: 0, 
+                        right: 0, 
+                        height: 500,
+                        pointerEvents: 'none' // Allow clicks to pass through to underlying elements
+                    }}>
+                        <Box sx={{
+                            position: 'relative', 
+                            width: '100%', 
+                            height: '100%',
+                            pointerEvents: 'auto' // Re-enable pointer events for bookings
+                        }}>
+                            {/* Multi-row booking layout */}
+                            {(() => {
+                                const rows: BookingDetails[][] = [];
+                                // Auto-adapt row height based on viewport width
+                                const viewportWidth = window.innerWidth;
+                                const baseRowHeight = 40;
+                                const minRowHeight = 35;
+                                const maxRowHeight = 80;
+                                
+                                // Calculate responsive row height
+                                let rowHeight: number;
+                                if (viewportWidth < 768) { // Mobile
+                                    rowHeight = Math.max(minRowHeight, baseRowHeight - 10);
+                                } else if (viewportWidth < 1024) { // Tablet
+                                    rowHeight = baseRowHeight;
+                                } else { // Desktop
+                                    rowHeight = Math.min(maxRowHeight, baseRowHeight + 10);
                                 }
                                 
-                                const booking = e as BookingDetails;
-                                // Use user's color preference or generate a fallback color based on user ID
-                                const userColor = booking.userColor || getFallbackColor(booking.user?.id || booking.added_by || 0);
-                                const colorInfo = getBookingColor(booking.type || 'booking', booking.status || 'pending', userColor);
-                                const canModify = canModifyBooking(booking);
-                                const isOwn = isOwnBooking(booking);
+                                const rowSpacing = Math.max(5, Math.floor(rowHeight * 0.2)); // Responsive spacing
                                 
-                                return (
-                                    <Grid key={idx} container sx={{
-                                        ml: booking.margin_left, 
-                                        flexBasis: booking.size, 
-                                        maxWidth: booking.size, 
-                                        px: 1, 
-                                        mb: 1,
-                                        transition: 'all 0.3s ease-in-out'
+                                bookingDetails.forEach((e) => {
+                                    if (e.isGap) return;
+                                    
+                                    const booking = e as BookingDetails;
+                                    let placed = false;
+                                    
+                                    // Try to place in existing rows
+                                    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+                                        const row = rows[rowIndex];
+                                        const canPlaceInRow = row.every(existingBooking => {
+                                            // Check if bookings overlap in time
+                                            const existingStart = moment(existingBooking.start, "YYYY-MM-DD");
+                                            const existingEnd = moment(existingBooking.end, "YYYY-MM-DD");
+                                            const newStart = moment(booking.start, "YYYY-MM-DD");
+                                            const newEnd = moment(booking.end, "YYYY-MM-DD");
+                                            
+                                            // Check for overlap
+                                            return newEnd.isBefore(existingStart) || newStart.isAfter(existingEnd);
+                                        });
+                                        
+                                        if (canPlaceInRow) {
+                                            row.push(booking);
+                                            placed = true;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    // If couldn't place in existing rows, create new row
+                                    if (!placed) {
+                                        rows.push([booking]);
+                                    }
+                                });
+                                
+                                return rows.map((row, rowIndex) => (
+                                    <Box key={rowIndex} sx={{
+                                        position: 'absolute',
+                                        top: `${rowIndex * (rowHeight + rowSpacing)}px`,
+                                        left: 0,
+                                        right: 0,
+                                        height: `${rowHeight}px`,
+                                        display: 'flex',
+                                        alignItems: 'center'
                                     }}>
-                                        <Grid item sx={{
-                                            backgroundColor: colorInfo.bg, 
-                                            border: `2px solid ${colorInfo.border}`, 
-                                            width: '100%', 
-                                            px: 1, 
-                                            borderRadius: 1, 
-                                            borderTopLeftRadius: booking.isStartOutOfWeek ? 0 : '4px', 
-                                            borderBottomLeftRadius: booking.isStartOutOfWeek ? 0 : '4px',
-                                            borderTopRightRadius: booking.isEndOutOfWeek ? 0 : '4px', 
-                                            borderBottomRightRadius: booking.isEndOutOfWeek ? 0 : '4px',
-                                            position: 'relative',
-                                            minHeight: '40px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            backgroundImage: booking.status === 'cancelled' ? 'repeating-linear-gradient(45deg, transparent, transparent 2px, currentColor 2px, currentColor 4px)' : 'none',
-                                            backgroundSize: '4px 4px',
-                                            opacity: booking.status === 'cancelled' ? 0.6 : 1,
-                                            cursor: isOwn ? 'pointer' : 'default',
-                                            transition: 'all 0.2s ease-in-out',
-                                            '&:hover': isOwn ? {
-                                                transform: 'scale(1.02)',
-                                                boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
-                                            } : {}
-                                        }}
-                                        onClick={() => isOwn && handleBookingClick(booking)}
-                                        >
-                                            <Box sx={{ 
-                                                color: colorInfo.text, 
-                                                fontSize: '0.75rem',
-                                                fontWeight: booking.status === 'pending' ? 'bold' : 'normal',
-                                                textAlign: 'center',
-                                                lineHeight: 1.2
-                                            }}>
-                                                <Box sx={{ fontWeight: 600, mb: 0.5 }}>
-                                                    {booking.user?.firstname} {booking.user?.lastname}
-                                                    {isOwn && (
-                                                        <Box component="span" sx={{ 
-                                                            fontSize: '0.6rem', 
-                                                            ml: 0.5, 
-                                                            opacity: 0.8,
-                                                            fontStyle: 'italic'
+                                        {row.map((booking, bookingIndex) => {
+                                            const userColor = booking.userColor || getFallbackColor(booking.user?.id || booking.added_by || 0);
+                                            const colorInfo = getBookingColor(booking.type || 'booking', booking.status || 'pending', userColor);
+                                            const isOwn = isOwnBooking(booking);
+                                            
+                                            return (
+                                                <Box key={bookingIndex} sx={{
+                                                    position: 'absolute',
+                                                    left: booking.margin_left,
+                                                    width: booking.size,
+                                                    height: `${rowHeight - 5}px`, // Slightly smaller than row height
+                                                    px: 0.5,
+                                                    transition: 'all 0.3s ease-in-out',
+                                                    zIndex: 1
+                                                }}>
+                                                    <Box sx={{
+                                                        backgroundColor: colorInfo.bg, 
+                                                        border: `2px solid ${colorInfo.border}`, 
+                                                        width: '100%', 
+                                                        height: '100%',
+                                                        px: 1.5, 
+                                                        py: 0.5,
+                                                        borderRadius: 1, 
+                                                        borderTopLeftRadius: booking.isStartOutOfWeek ? 0 : '4px', 
+                                                        borderBottomLeftRadius: booking.isStartOutOfWeek ? 0 : '4px',
+                                                        borderTopRightRadius: booking.isEndOutOfWeek ? 0 : '4px', 
+                                                        borderBottomRightRadius: booking.isEndOutOfWeek ? 0 : '4px',
+                                                        position: 'relative',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        backgroundImage: booking.status === 'cancelled' ? 'repeating-linear-gradient(45deg, transparent, transparent 2px, currentColor 2px, currentColor 4px)' : 'none',
+                                                        backgroundSize: '4px 4px',
+                                                        opacity: booking.status === 'cancelled' ? 0.6 : 1,
+                                                        cursor: isOwn ? 'pointer' : 'default',
+                                                        transition: 'all 0.2s ease-in-out',
+                                                        '&:hover': isOwn ? {
+                                                            transform: 'scale(1.02)',
+                                                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                                                            zIndex: 2
+                                                        } : {}
+                                                    }}
+                                                    onClick={() => isOwn && handleBookingClick(booking)}
+                                                    >
+                                                        <Box sx={{ 
+                                                            color: colorInfo.text, 
+                                                            fontWeight: booking.status === 'pending' ? 'bold' : 'normal',
+                                                            textAlign: 'left',
+                                                            lineHeight: 1.2,
+                                                            width: '100%',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis'
                                                         }}>
-                                                            (vous)
+                                                            {/* Main line: Name and Duration */}
+                                                            <Box sx={{ 
+                                                                fontWeight: 600, 
+                                                                mb: 0.5,
+                                                                fontSize: 'clamp(0.6rem, 2vw, 0.75rem)',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                whiteSpace: 'nowrap',
+                                                                display: 'flex',
+                                                                justifyContent: 'flex-start',
+                                                                alignItems: 'center',
+                                                                gap: 0.5
+                                                            }}>
+                                                                <Box>
+                                                                    {booking.user?.firstname} {booking.user?.lastname}
+                                                                    {isOwn && (
+                                                                        <Box component="span" sx={{ 
+                                                                            fontSize: '0.6rem', 
+                                                                            ml: 0.5, 
+                                                                            opacity: 0.8,
+                                                                            fontStyle: 'italic'
+                                                                        }}>
+                                                                            (vous)
+                                                                        </Box>
+                                                                    )}
+                                                                </Box>
+                                                                <Box sx={{ 
+                                                                    fontSize: 'clamp(0.6rem, 1.5vw, 0.7rem)', 
+                                                                    opacity: 0.9,
+                                                                    fontWeight: 'normal'
+                                                                }}>
+                                                                    {booking.duration}j
+                                                                </Box>
+                                                            </Box>
+                                                            
+                                                            {/* Status line - only show if there's space or if status is important */}
+                                                            <Box sx={{ 
+                                                                fontSize: 'clamp(0.5rem, 1.2vw, 0.65rem)', 
+                                                                opacity: 0.8, 
+                                                                fontStyle: 'italic',
+                                                                overflow: 'hidden',
+                                                                textOverflow: 'ellipsis',
+                                                                whiteSpace: 'nowrap',
+                                                                textAlign: 'left'
+                                                            }}>
+                                                                {getStatusText(booking.status || 'pending')}
+                                                            </Box>
+                                                            
+                                                            {/* Out of week indicators */}
+                                                            {(booking.isStartOutOfWeek || booking.isEndOutOfWeek) && (
+                                                                <Box sx={{ 
+                                                                    fontSize: '0.6rem', 
+                                                                    opacity: 0.7,
+                                                                    overflow: 'hidden',
+                                                                    textOverflow: 'ellipsis',
+                                                                    whiteSpace: 'nowrap',
+                                                                    textAlign: 'left'
+                                                                }}>
+                                                                    {booking.isStartOutOfWeek && '←'} {booking.isEndOutOfWeek && '→'}
+                                                                </Box>
+                                                            )}
                                                         </Box>
-                                                    )}
-                                                </Box>
-                                                <Box sx={{ fontSize: '0.7rem', opacity: 0.9 }}>
-                                                    {booking.duration} jour{booking.duration > 1 ? 's' : ''}
-                                                </Box>
-                                                <Box sx={{ fontSize: '0.65rem', opacity: 0.8, fontStyle: 'italic' }}>
-                                                    {getStatusText(booking.status || 'pending')}
-                                                </Box>
-                                                {(booking.isStartOutOfWeek || booking.isEndOutOfWeek) && (
-                                                    <Box sx={{ fontSize: '0.6rem', opacity: 0.7 }}>
-                                                        {booking.isStartOutOfWeek && '←'} {booking.isEndOutOfWeek && '→'}
                                                     </Box>
-                                                )}
-                                            </Box>
-                                        </Grid>
-                                    </Grid>
-                                );
-                            })}
+                                                </Box>
+                                            );
+                                        })}
+                                    </Box>
+                                ));
+                            })()}
                         </Box>
                     </Box>
                 </Box>
@@ -390,7 +493,7 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
                                 <Typography variant="body2" sx={{ mt: 2, p: 1, bgcolor: 'info.light', borderRadius: 1, color: 'info.contrastText' }}>
                                     ✓ Cette réservation vous appartient.
                                     {selectedBooking.status === 'pending' && ' Vous pouvez la modifier ou l\'annuler.'}
-                                    {selectedBooking.status === 'approved' && ' Elle a été approuvée.'}
+                                    {selectedBooking.status === 'approved' && ' Elle a été approuvée. Vous pouvez l\'annuler.'}
                                     {selectedBooking.status === 'cancelled' && ' Elle a été annulée.'}
                                 </Typography>
                             )}
@@ -406,11 +509,13 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
                     <Button onClick={() => setActionDialogOpen(false)}>
                         Fermer
                     </Button>
-                    {selectedBooking && isOwnBooking(selectedBooking) && selectedBooking.status === 'pending' && (
+                    {selectedBooking && isOwnBooking(selectedBooking) && ['pending', 'approved'].includes(selectedBooking.status || '') && (
                         <>
-                            <Button onClick={handleModifyBooking} color="primary">
-                                Modifier
-                            </Button>
+                            {selectedBooking.status === 'pending' && (
+                                <Button onClick={handleModifyBooking} color="primary">
+                                    Modifier
+                                </Button>
+                            )}
                             <Button onClick={() => selectedBooking.id && handleDeleteBooking(selectedBooking.id)} color="error">
                                 Annuler
                             </Button>

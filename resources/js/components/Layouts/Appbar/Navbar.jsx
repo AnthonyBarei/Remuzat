@@ -10,12 +10,12 @@ import MenuIcon from '@mui/icons-material/Menu';
 import Button from '@mui/material/Button';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
 // Components
-import LogoutButton from './LogoutButton';
+import UserMenu from './LogoutButton';
 // Auth
 import { useAuth } from '../../../context/hooks/useAuth';
 
-const pagesUser = {'Réservations': '/reservation'};
-const pagesAdmin = {'Réservations': '/reservation', 'Utilisateurs': '/users'};
+const pagesUser = {};
+const pagesAdmin = {};
 
 const ResponsiveAppBar = (props) => {
     // Theme
@@ -27,8 +27,11 @@ const ResponsiveAppBar = (props) => {
     const [anchorElNav, setAnchorElNav] = React.useState(null);
     const [anchorElUser, setAnchorElUser] = React.useState(null);
     // Auth
-    const { user } = useAuth();
-    const pages = user.is_admin ? pagesAdmin : pagesUser;
+    const { user, isAdmin } = useAuth();
+    const pages = isAdmin ? pagesAdmin : pagesUser;
+
+    // Debug admin status
+    console.log('Navbar - isAdmin:', isAdmin, 'user:', user);
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);
@@ -53,7 +56,8 @@ const ResponsiveAppBar = (props) => {
     return (
         <AppBar position="fixed" sx={{ 
             zIndex: (theme) => theme.zIndex.drawer + 1,
-            backgroundColor: 'white',
+            bgcolor: 'rgba(255,255,255,0.95)', 
+            backdropFilter: 'blur(10px)',
             color: 'text.primary',
             boxShadow: '0 2px 20px rgba(0,0,0,0.1)'
         }}>
@@ -63,7 +67,7 @@ const ResponsiveAppBar = (props) => {
                     aria-label="open drawer"
                     edge="start"
                     onClick={props.handleDrawerToggle}
-                    sx={{ mr: 2, display: { sm: 'none' } }}
+                    sx={{ mr: 2, display: { sm: 'none' }, color: 'primary.main' }}
                 >
                     <MenuIcon />
                 </IconButton>
@@ -71,7 +75,7 @@ const ResponsiveAppBar = (props) => {
                 <Box sx={{ 
                     fontWeight: 700, 
                     fontSize: 24, 
-                    color: 'text.primary', 
+                    color: 'primary.main', 
                     letterSpacing: 1, 
                     cursor: 'pointer', 
                     mr: 6 
@@ -88,7 +92,7 @@ const ResponsiveAppBar = (props) => {
                             onClick={handleCloseNavMenu}
                             sx={{
                                 my: 2,
-                                color: 'text.secondary',
+                                color: 'primary.main',
                                 fontWeight: 600,
                                 display: 'block',
                                 borderRadius: 2,
@@ -104,8 +108,26 @@ const ResponsiveAppBar = (props) => {
                     ))}
                 </Box>
 
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <LogoutButton label="Déconnexion" />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    {(isAdmin || user?.is_admin || user?.role === 'admin' || user?.role === 'super_admin') && (
+                        <Button
+                            variant="outlined"
+                            onClick={() => window.open('/admin', '_blank')}
+                            sx={{
+                                borderColor: 'secondary.main',
+                                color: 'secondary.main',
+                                fontWeight: 600,
+                                borderRadius: 2,
+                                '&:hover': { 
+                                    bgcolor: 'secondary.main',
+                                    color: 'white'
+                                }
+                            }}
+                        >
+                            Admin
+                        </Button>
+                    )}
+                    <UserMenu />
                 </Box>
             </Toolbar>
         </AppBar>

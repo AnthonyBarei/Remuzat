@@ -18,11 +18,13 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import LandingNavbar from '../Layouts/LandingNavbar';
+import { useAuth } from '../../context/hooks/useAuth';
 
 const Landing: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
+    const { authed } = useAuth();
 
     const activities = [
         {
@@ -103,20 +105,21 @@ const Landing: React.FC = () => {
             </Box>
 
             {/* Activities Section */}
-            <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
-                <Typography
-                    variant="h3"
-                    component="h2"
-                    align="center"
-                    sx={{ 
-                        mb: 6, 
-                        fontWeight: 600,
-                        color: 'text.primary',
-                        fontSize: { xs: '1.8rem', md: '2.2rem' }
-                    }}
-                >
-                    🏞️ À découvrir à Remuzat et ses alentours
-                </Typography>
+            <Box id="activities">
+                <Container maxWidth="lg" sx={{ py: { xs: 6, md: 8 } }}>
+                    <Typography
+                        variant="h3"
+                        component="h2"
+                        align="center"
+                        sx={{ 
+                            mb: 6, 
+                            fontWeight: 600,
+                            color: 'text.primary',
+                            fontSize: { xs: '1.8rem', md: '2.2rem' }
+                        }}
+                    >
+                        🏞️ À découvrir à Remuzat et ses alentours
+                    </Typography>
                 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 4 }}>
                     {activities.map((activity, index) => (
@@ -163,9 +166,11 @@ const Landing: React.FC = () => {
                     ))}
                 </Box>
             </Container>
+            </Box>
 
             {/* CTA Section */}
             <Box
+                id="reservation"
                 sx={{
                     background: `linear-gradient(135deg, ${theme.palette.success.main} 0%, ${theme.palette.info.main} 100%)`,
                     color: 'white',
@@ -183,7 +188,7 @@ const Landing: React.FC = () => {
                                 fontSize: { xs: '1.8rem', md: '2.2rem' }
                             }}
                         >
-                            👋 Espace privé
+                            {authed ? '👋 Espace de réservation' : '👋 Espace privé'}
                         </Typography>
                         <Typography 
                             variant="body1" 
@@ -195,8 +200,10 @@ const Landing: React.FC = () => {
                                 mx: 'auto'
                             }}
                         >
-                            Accédez à votre espace de réservation pour planifier votre séjour à Remuzat. 
-                            Réservez vos dates et découvrez toutes les disponibilités en temps réel.
+                            {authed 
+                                ? 'Accédez à votre espace de réservation pour planifier votre séjour à Remuzat. Réservez vos dates et découvrez toutes les disponibilités en temps réel.'
+                                : 'Accédez à votre espace de réservation pour planifier votre séjour à Remuzat. Réservez vos dates et découvrez toutes les disponibilités en temps réel.'
+                            }
                         </Typography>
                         
                         <Stack 
@@ -205,37 +212,57 @@ const Landing: React.FC = () => {
                             justifyContent="center"
                             alignItems="center"
                         >
-                            <Button
-                                variant="contained"
-                                size="large"
-                                startIcon={<Login />}
-                                onClick={() => navigate('/login')}
-                                sx={{
-                                    bgcolor: 'white',
-                                    color: 'primary.main',
-                                    '&:hover': {
-                                        bgcolor: 'grey.100'
-                                    }
-                                }}
-                            >
-                                Se connecter
-                            </Button>
-                            <Button
-                                variant="outlined"
-                                size="large"
-                                startIcon={<CalendarMonth />}
-                                onClick={() => navigate('/signup')}
-                                sx={{
-                                    borderColor: 'white',
-                                    color: 'white',
-                                    '&:hover': {
-                                        borderColor: 'grey.100',
-                                        bgcolor: 'rgba(255,255,255,0.1)'
-                                    }
-                                }}
-                            >
-                                S'inscrire
-                            </Button>
+                            {!authed ? (
+                                <>
+                                    <Button
+                                        variant="contained"
+                                        size="large"
+                                        startIcon={<Login />}
+                                        onClick={() => navigate('/login')}
+                                        sx={{
+                                            bgcolor: 'white',
+                                            color: 'primary.main',
+                                            '&:hover': {
+                                                bgcolor: 'grey.100'
+                                            }
+                                        }}
+                                    >
+                                        Se connecter
+                                    </Button>
+                                    <Button
+                                        variant="outlined"
+                                        size="large"
+                                        startIcon={<CalendarMonth />}
+                                        onClick={() => navigate('/signup')}
+                                        sx={{
+                                            borderColor: 'white',
+                                            color: 'white',
+                                            '&:hover': {
+                                                borderColor: 'grey.100',
+                                                bgcolor: 'rgba(255,255,255,0.1)'
+                                            }
+                                        }}
+                                    >
+                                        S'inscrire
+                                    </Button>
+                                </>
+                            ) : (
+                                <Button
+                                    variant="contained"
+                                    size="large"
+                                    startIcon={<CalendarMonth />}
+                                    onClick={() => navigate('/reservation')}
+                                    sx={{
+                                        bgcolor: 'white',
+                                        color: 'primary.main',
+                                        '&:hover': {
+                                            bgcolor: 'grey.100'
+                                        }
+                                    }}
+                                >
+                                    Réserver
+                                </Button>
+                            )}
                         </Stack>
                     </Box>
                 </Container>

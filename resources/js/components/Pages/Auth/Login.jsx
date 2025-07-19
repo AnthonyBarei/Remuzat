@@ -45,26 +45,57 @@ export default function Login({authenticate}) {
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                    Sign in
+                    Connexion
                 </Typography>
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-                    <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" autoComplete="email" autoFocus/>
-                    <TextField margin="normal" required fullWidth name="password" label="Password" type="password" id="password" autoComplete="current-password"/>
+                    <TextField 
+                        margin="normal" 
+                        required 
+                        fullWidth 
+                        id="email" 
+                        label="Adresse email" 
+                        name="email" 
+                        autoComplete="email" 
+                        autoFocus
+                    />
+                    <TextField 
+                        margin="normal" 
+                        required 
+                        fullWidth 
+                        name="password" 
+                        label="Mot de passe" 
+                        type="password" 
+                        id="password" 
+                        autoComplete="current-password"
+                    />
 
-                    <FormControlLabel control={<Checkbox value="remember" color="primary" />} label="Remember me"/>
+                    <FormControlLabel 
+                        control={<Checkbox value="remember" color="primary" />} 
+                        label="Se souvenir de moi"
+                        sx={{ mt: 1 }}
+                    />
 
-                    {alert && (<Alert severity="error" sx={{ mb: 2 }}>{alert}</Alert>)}
+                    {alert && (<Alert severity="error" sx={{ mb: 2, mt: 2 }}>{alert}</Alert>)}
 
-                    <Button type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }}>
-                        Sign In
+                    <Button 
+                        type="submit" 
+                        fullWidth 
+                        variant="contained" 
+                        sx={{ mt: 3, mb: 2 }}
+                    >
+                        Se connecter
                     </Button>
 
-                    <Grid container>
-                        <Grid item xs>
-                            <Link href="#" variant="body2">Forgot password?</Link>
+                    <Grid container spacing={1}>
+                        <Grid item xs={12}>
+                            <Link component={RouterLink} to="/forgot-password" variant="body2">
+                                Mot de passe oublié ?
+                            </Link>
                         </Grid>
-                        <Grid item>
-                            <Link component={RouterLink} to="/signup" variant="body2">{"Don't have an account? Sign Up"}</Link>
+                        <Grid item xs={12}>
+                            <Link component={RouterLink} to="/signup" variant="body2">
+                                Vous n'avez pas de compte ? S'inscrire
+                            </Link>
                         </Grid>
                     </Grid>
                 </Box>

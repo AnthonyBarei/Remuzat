@@ -19,7 +19,7 @@ class SuperAdminController extends BaseController
     public function dashboard()
     {
         if (Gate::denies('view-super-admin-dashboard')) {
-            return $this->sendError('Access denied. Super admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges super administrateur requis.', [], 403);
         }
 
         try {
@@ -65,9 +65,9 @@ class SuperAdminController extends BaseController
                 'advanced_analytics' => $advancedAnalytics
             ];
 
-            return $this->sendResponse($data, 'Super admin dashboard data retrieved successfully.');
+            return $this->sendResponse($data, 'Données du tableau de bord super administrateur récupérées avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving super admin dashboard data.', $e->getMessage());
+            return $this->sendError('Erreur lors de la récupération des données du tableau de bord super administrateur.', $e->getMessage());
         }
     }
 
@@ -79,7 +79,7 @@ class SuperAdminController extends BaseController
     public function getUsers()
     {
         if (Gate::denies('manage-admins')) {
-            return $this->sendError('Access denied. Super admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges super administrateur requis.', [], 403);
         }
 
         try {
@@ -88,9 +88,9 @@ class SuperAdminController extends BaseController
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            return $this->sendResponse($users, 'Users retrieved successfully.');
+            return $this->sendResponse($users, 'Utilisateurs récupérés avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving users.', $e->getMessage());
+            return $this->sendError('Erreur lors de la récupération des utilisateurs.', $e->getMessage());
         }
     }
 
@@ -104,7 +104,7 @@ class SuperAdminController extends BaseController
     public function updateUserRole(Request $request, User $user)
     {
         if (Gate::denies('manage-user-roles')) {
-            return $this->sendError('Access denied. Super admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges super administrateur requis.', [], 403);
         }
 
         try {
@@ -113,12 +113,12 @@ class SuperAdminController extends BaseController
             ]);
 
             if ($validator->fails()) {
-                return $this->sendError('Validation Error.', $validator->errors());
+                return $this->sendError('Erreur de validation.', $validator->errors());
             }
 
             // Prevent self-demotion
             if ($user->id === auth()->id()) {
-                return $this->sendError('You cannot change your own role.', [], 403);
+                return $this->sendError('Vous ne pouvez pas changer votre propre rôle.', [], 403);
             }
 
             $oldRole = $user->role;
@@ -143,7 +143,7 @@ class SuperAdminController extends BaseController
                 'new_role' => $newRole
             ], $message);
         } catch (\Exception $e) {
-            return $this->sendError('Error updating user role.', $e->getMessage());
+            return $this->sendError('Erreur lors de la mise à jour du rôle utilisateur.', $e->getMessage());
         }
     }
 
@@ -156,7 +156,7 @@ class SuperAdminController extends BaseController
     public function promoteToAdmin(User $user)
     {
         if (Gate::denies('promote-to-admin', $user)) {
-            return $this->sendError('Access denied. Super admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges super administrateur requis.', [], 403);
         }
 
         try {
@@ -168,7 +168,7 @@ class SuperAdminController extends BaseController
 
             return $this->sendResponse($user, $message);
         } catch (\Exception $e) {
-            return $this->sendError('Error promoting user to admin.', $e->getMessage());
+            return $this->sendError('Erreur lors de la promotion de l\'utilisateur au rang d\'administrateur.', $e->getMessage());
         }
     }
 
@@ -181,7 +181,7 @@ class SuperAdminController extends BaseController
     public function demoteAdmin(User $user)
     {
         if (Gate::denies('demote-admin', $user)) {
-            return $this->sendError('Access denied. Super admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges super administrateur requis.', [], 403);
         }
 
         try {
@@ -193,7 +193,7 @@ class SuperAdminController extends BaseController
 
             return $this->sendResponse($user, $message);
         } catch (\Exception $e) {
-            return $this->sendError('Error demoting admin.', $e->getMessage());
+            return $this->sendError('Erreur lors de la rétrogradation de l\'administrateur.', $e->getMessage());
         }
     }
 
@@ -205,7 +205,7 @@ class SuperAdminController extends BaseController
     public function getSystemSettings()
     {
         if (Gate::denies('manage-system-settings')) {
-            return $this->sendError('Access denied. Super admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges super administrateur requis.', [], 403);
         }
 
         try {
@@ -220,9 +220,9 @@ class SuperAdminController extends BaseController
                 'queue_driver' => config('queue.default'),
             ];
 
-            return $this->sendResponse($settings, 'System settings retrieved successfully.');
+            return $this->sendResponse($settings, 'Paramètres système récupérés avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving system settings.', $e->getMessage());
+            return $this->sendError('Erreur lors de la récupération des paramètres système.', $e->getMessage());
         }
     }
 
@@ -234,7 +234,7 @@ class SuperAdminController extends BaseController
     public function getSystemLogs()
     {
         if (Gate::denies('view-system-logs')) {
-            return $this->sendError('Access denied. Super admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges super administrateur requis.', [], 403);
         }
 
         try {
@@ -245,9 +245,9 @@ class SuperAdminController extends BaseController
                 'security_logs' => 'Logs de sécurité (non implémenté)'
             ];
 
-            return $this->sendResponse($logs, 'System logs retrieved successfully.');
+            return $this->sendResponse($logs, 'Logs système récupérés avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving system logs.', $e->getMessage());
+            return $this->sendError('Erreur lors de la récupération des logs système.', $e->getMessage());
         }
     }
 

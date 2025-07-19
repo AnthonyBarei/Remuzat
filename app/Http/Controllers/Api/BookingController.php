@@ -51,9 +51,9 @@ class BookingController extends BaseController
             
             $bookings = $query->orderBy('start', 'asc')->get();
             
-            return $this->sendResponse($bookings, 'Bookings retrieved successfully.');
+            return $this->sendResponse($bookings, 'Réservations récupérées avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Failed to retrieve bookings.', [], 500);
+            return $this->sendError('Impossible de récupérer les réservations.', [], 500);
         }
     }
 
@@ -147,10 +147,10 @@ class BookingController extends BaseController
             }
 
             // return successful response
-            return $this->sendResponse($booking, 'Booking created successfully.');
+            return $this->sendResponse($booking, 'Réservation créée avec succès.');
         } catch (\Exception $e) {
             // return error message
-            return $this->sendError('Booking creation failed.', [], 500);
+            return $this->sendError('Échec de la création de la réservation.', [], 500);
         }
     }
 
@@ -164,9 +164,9 @@ class BookingController extends BaseController
     {
         try {
             $booking->load(['user', 'validatedBy']);
-            return $this->sendResponse($booking, 'Booking retrieved successfully.');
+            return $this->sendResponse($booking, 'Réservation récupérée avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Failed to retrieve booking.', [], 500);
+            return $this->sendError('Impossible de récupérer la réservation.', [], 500);
         }
     }
 
@@ -181,7 +181,7 @@ class BookingController extends BaseController
     {
         // Check if user can update this booking
         if ($booking->added_by !== Auth::user()->id && !Auth::user()->is_admin) {
-            return $this->sendError('Unauthorized to update this booking.', [], 403);
+            return $this->sendError('Non autorisé à modifier cette réservation.', [], 403);
         }
 
         // validate incoming request
@@ -233,16 +233,16 @@ class BookingController extends BaseController
                     })->exists();
 
                 if ($overlapping) {
-                    return $this->sendError('Booking overlaps with existing booking.', [], 422);
+                    return $this->sendError('La réservation chevauche une réservation existante.', [], 422);
                 }
             }
 
             $booking->update($updateData);
             $booking->load(['user', 'validatedBy']);
 
-            return $this->sendResponse($booking, 'Booking updated successfully.');
+            return $this->sendResponse($booking, 'Réservation mise à jour avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Booking update failed.', [], 500);
+            return $this->sendError('Échec de la mise à jour de la réservation.', [], 500);
         }
     }
 
@@ -257,21 +257,21 @@ class BookingController extends BaseController
         try {
             // Check if user can cancel this booking
             if ($booking->added_by !== Auth::user()->id && !Auth::user()->is_admin) {
-                return $this->sendError('Unauthorized to cancel this booking.', [], 403);
+                return $this->sendError('Non autorisé à annuler cette réservation.', [], 403);
             }
 
             // Allow cancellation of pending and approved bookings
             if (!in_array($booking->status, ['pending', 'approved'])) {
-                return $this->sendError('Only pending or approved bookings can be cancelled.', [], 422);
+                return $this->sendError('Seules les réservations en attente ou approuvées peuvent être annulées.', [], 422);
             }
 
             $booking->status = 'cancelled';
             $booking->save();
             
             $booking->load(['user', 'validatedBy']);
-            return $this->sendResponse($booking, 'Booking cancelled successfully.');
+            return $this->sendResponse($booking, 'Réservation annulée avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Booking cancellation failed.', [], 500);
+            return $this->sendError('Échec de l\'annulation de la réservation.', [], 500);
         }
     }
 
@@ -285,7 +285,7 @@ class BookingController extends BaseController
     public function adminUpdate(Request $request, Booking $booking)
     {
         if (Gate::denies('update', $booking)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         // validate incoming request
@@ -372,7 +372,7 @@ class BookingController extends BaseController
 
             return $this->sendResponse($booking, 'Réservation modifiée avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Booking update failed.', [], 500);
+            return $this->sendError('Échec de la mise à jour de la réservation.', [], 500);
         }
     }
 
@@ -385,7 +385,7 @@ class BookingController extends BaseController
     public function adminIndex(Request $request)
     {
         if (Gate::denies('viewAny', Booking::class)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         try {
@@ -443,9 +443,9 @@ class BookingController extends BaseController
                 }));
             }
 
-            return $this->sendResponse($bookings, 'Reservations retrieved successfully.');
+            return $this->sendResponse($bookings, 'Réservations récupérées avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Failed to retrieve reservations.', [], 500);
+            return $this->sendError('Impossible de récupérer les réservations.', [], 500);
         }
     }
 
@@ -458,12 +458,12 @@ class BookingController extends BaseController
     public function approve(Booking $booking)
     {
         if (Gate::denies('update', $booking)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         try {
             if ($booking->status !== 'pending') {
-                return $this->sendError('Only pending reservations can be approved.', [], 422);
+                return $this->sendError('Seules les réservations en attente peuvent être approuvées.', [], 422);
             }
 
             $booking->status = 'approved';
@@ -471,9 +471,9 @@ class BookingController extends BaseController
             $booking->save();
 
             $booking->load(['user', 'validatedBy']);
-            return $this->sendResponse($booking, 'Reservation approuvée avec succès.');
+            return $this->sendResponse($booking, 'Réservation approuvée avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Failed to approve reservation.', [], 500);
+            return $this->sendError('Échec de l\'approbation de la réservation.', [], 500);
         }
     }
 
@@ -486,12 +486,12 @@ class BookingController extends BaseController
     public function reject(Booking $booking)
     {
         if (Gate::denies('update', $booking)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         try {
             if ($booking->status !== 'pending') {
-                return $this->sendError('Only pending reservations can be rejected.', [], 422);
+                return $this->sendError('Seules les réservations en attente peuvent être rejetées.', [], 422);
             }
 
             $booking->status = 'cancelled';
@@ -499,9 +499,9 @@ class BookingController extends BaseController
             $booking->save();
 
             $booking->load(['user', 'validatedBy']);
-            return $this->sendResponse($booking, 'Reservation rejetée avec succès.');
+            return $this->sendResponse($booking, 'Réservation rejetée avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Failed to reject reservation.', [], 500);
+            return $this->sendError('Échec du rejet de la réservation.', [], 500);
         }
     }
 
@@ -513,7 +513,7 @@ class BookingController extends BaseController
     public function statistics()
     {
         if (Gate::denies('viewAny', Booking::class)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         try {
@@ -524,9 +524,9 @@ class BookingController extends BaseController
                 'total' => Booking::count(),
             ];
 
-            return $this->sendResponse($stats, 'Statistics retrieved successfully.');
+            return $this->sendResponse($stats, 'Statistiques récupérées avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Failed to retrieve statistics.', [], 500);
+            return $this->sendError('Impossible de récupérer les statistiques.', [], 500);
         }
     }
 }

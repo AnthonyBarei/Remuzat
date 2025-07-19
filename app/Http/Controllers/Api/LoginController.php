@@ -14,9 +14,9 @@ class LoginController extends BaseController
         $logged_in = Auth::check();
 
         if ($logged_in) {
-            return $this->sendResponse(['authenticated' => true], 'User logged in successfully.');
+            return $this->sendResponse(['authenticated' => true], 'Utilisateur connecté avec succès.');
         } else {
-            return $this->sendError('Unauthenticated.', ['error' => 'User is not logged in.'], 401);
+            return $this->sendError('Non authentifié.', ['error' => 'L\'utilisateur n\'est pas connecté.'], 401);
         }
     }
 
@@ -28,7 +28,7 @@ class LoginController extends BaseController
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => 'fix errors', 'errors' => $validator->errors()], 500);
+            return response()->json(['status' => false, 'message' => 'Corrigez les erreurs', 'errors' => $validator->errors()], 500);
         }
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
@@ -41,12 +41,12 @@ class LoginController extends BaseController
                 $success['name'] = $name;
                 $success['email'] = $user->email;
 
-                return $this->sendResponse($success, 'User login successfully.');
+                return $this->sendResponse($success, 'Connexion réussie.');
             } else {
-                return $this->sendError('Wrong instance of user.', ['error' => 'Wrong instance of user'], 500);
+                return $this->sendError('Mauvaise instance d\'utilisateur.', ['error' => 'Mauvaise instance d\'utilisateur'], 500);
             }
         } else {
-            return $this->sendError('Unauthorised.', ['error' => 'Unauthorised'], 401);
+            return $this->sendError('Non autorisé.', ['error' => 'Non autorisé'], 401);
         }
     }
 
@@ -56,11 +56,11 @@ class LoginController extends BaseController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['status' => true, 'message' => 'logged out']);
+        return response()->json(['status' => true, 'message' => 'Déconnecté']);
     }
 
     public function me()
     {
-        return response()->json(['status' => true, 'user' => auth()->user(), 'message' => 'User retrieved successfully.']);
+        return response()->json(['status' => true, 'user' => auth()->user(), 'message' => 'Profil utilisateur récupéré avec succès.']);
     }
 }

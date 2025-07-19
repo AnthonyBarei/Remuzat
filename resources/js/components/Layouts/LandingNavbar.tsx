@@ -16,20 +16,37 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/hooks/useAuth';
+import LogoutButton from './Appbar/LogoutButton.jsx';
 
 const LandingNavbar: React.FC = () => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { authed, isAdmin } = useAuth();
 
     const handleDrawerToggle = () => {
         setMobileOpen(!mobileOpen);
     };
 
+    const scrollToSection = (elementId: string) => {
+        const element = document.getElementById(elementId);
+        if (element) {
+            const offset = 80; // Account for fixed navbar height
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+            
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    };
+
     const navItems = [
         { label: 'Accueil', action: () => window.scrollTo({ top: 0, behavior: 'smooth' }) },
-        { label: 'Activités', action: () => document.getElementById('activities')?.scrollIntoView({ behavior: 'smooth' }) }
+        { label: 'Activités', action: () => scrollToSection('activities') }
     ];
 
     const drawer = (
@@ -43,19 +60,84 @@ const LandingNavbar: React.FC = () => {
                         <ListItemText primary={item.label} />
                     </ListItem>
                 ))}
-                <ListItem>
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        onClick={() => navigate('/login')}
-                        sx={{
-                            bgcolor: 'primary.main',
-                            '&:hover': { bgcolor: 'primary.dark' }
-                        }}
-                    >
-                        Réserver
-                    </Button>
-                </ListItem>
+                {!authed ? (
+                    <>
+                        <ListItem>
+                            <Button
+                                variant="contained"
+                                fullWidth
+                                onClick={() => navigate('/login')}
+                                sx={{
+                                    bgcolor: 'primary.main',
+                                    '&:hover': { bgcolor: 'primary.dark' }
+                                }}
+                            >
+                                Se connecter
+                            </Button>
+                        </ListItem>
+                        <ListItem>
+                            <Button
+                                variant="outlined"
+                                fullWidth
+                                onClick={() => navigate('/signup')}
+                                sx={{
+                                    borderColor: 'primary.main',
+                                    color: 'primary.main',
+                                    '&:hover': { 
+                                        bgcolor: 'primary.main',
+                                        color: 'white'
+                                    }
+                                }}
+                            >
+                                S'inscrire
+                            </Button>
+                        </ListItem>
+                    </>
+                ) : (
+                    <>
+                        <ListItem>
+                            <Button
+                                variant="outlined"
+                                fullWidth
+                                onClick={() => navigate('/reservation')}
+                                sx={{
+                                    borderColor: 'primary.main',
+                                    color: 'primary.main',
+                                    '&:hover': { 
+                                        bgcolor: 'primary.main',
+                                        color: 'white'
+                                    }
+                                }}
+                            >
+                                Réserver
+                            </Button>
+                        </ListItem>
+                        {isAdmin && (
+                            <ListItem>
+                                <Button
+                                    variant="outlined"
+                                    fullWidth
+                                    onClick={() => window.open('/admin', '_blank')}
+                                    sx={{
+                                        borderColor: 'secondary.main',
+                                        color: 'secondary.main',
+                                        '&:hover': { 
+                                            bgcolor: 'secondary.main',
+                                            color: 'white'
+                                        }
+                                    }}
+                                >
+                                    Admin
+                                </Button>
+                            </ListItem>
+                        )}
+                        <ListItem>
+                            <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>
+                                <LogoutButton />
+                            </Box>
+                        </ListItem>
+                    </>
+                )}
             </List>
         </Box>
     );
@@ -113,16 +195,64 @@ const LandingNavbar: React.FC = () => {
                                         {item.label}
                                     </Button>
                                 ))}
-                                <Button
-                                    variant="contained"
-                                    onClick={() => navigate('/login')}
-                                    sx={{
-                                        bgcolor: 'primary.main',
-                                        '&:hover': { bgcolor: 'primary.dark' }
-                                    }}
-                                >
-                                    Réserver
-                                </Button>
+                                {!authed ? (
+                                    <>
+                                        <Button
+                                            variant="outlined"
+                                            onClick={() => navigate('/login')}
+                                            sx={{
+                                                borderColor: 'primary.main',
+                                                color: 'primary.main',
+                                                '&:hover': { 
+                                                    bgcolor: 'primary.main',
+                                                    color: 'white'
+                                                }
+                                            }}
+                                        >
+                                            Se connecter
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            onClick={() => navigate('/signup')}
+                                            sx={{
+                                                bgcolor: 'primary.main',
+                                                '&:hover': { bgcolor: 'primary.dark' }
+                                            }}
+                                        >
+                                            S'inscrire
+                                        </Button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Button
+                                            variant="contained"
+                                            onClick={() => navigate('/reservation')}
+                                            sx={{
+                                                bgcolor: 'primary.main',
+                                                '&:hover': { bgcolor: 'primary.dark' }
+                                            }}
+                                        >
+                                            Réserver
+                                        </Button>
+                                        {isAdmin && (
+                                            <Button
+                                                variant="outlined"
+                                                onClick={() => window.open('/admin', '_blank')}
+                                                sx={{
+                                                    borderColor: 'secondary.main',
+                                                    color: 'secondary.main',
+                                                    '&:hover': { 
+                                                        bgcolor: 'secondary.main',
+                                                        color: 'white'
+                                                    }
+                                                }}
+                                            >
+                                                Admin
+                                            </Button>
+                                        )}
+                                        <LogoutButton />
+                                    </>
+                                )}
                             </Box>
                         )}
                     </Toolbar>

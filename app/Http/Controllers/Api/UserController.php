@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends BaseController
 {
@@ -19,11 +20,11 @@ class UserController extends BaseController
     public function index()
     {
         if (Gate::denies('viewAny', User::class)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         $users = User::all();
-        return $this->sendResponse(UserResource::collection($users), 'Users retrieved successfully.');
+        return $this->sendResponse(UserResource::collection($users), 'Utilisateurs récupérés avec succès.');
     }
 
     public function count()
@@ -31,7 +32,7 @@ class UserController extends BaseController
         $users = User::all()->count();
         $last_user = User::latest()->first();
         $last_user['name'] = $last_user->firstname . (($last_user->lastname) ? " " . $last_user->lastname : "");
-        return $this->sendResponse(["count" => $users, "last" => $last_user], 'Users counted successfully.');
+        return $this->sendResponse(["count" => $users, "last" => $last_user], 'Utilisateurs comptés avec succès.');
     }
 
     /**
@@ -53,7 +54,7 @@ class UserController extends BaseController
     public function store(Request $request)
     {
         if (Gate::denies('create', User::class)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -66,7 +67,7 @@ class UserController extends BaseController
         ]);
 
         if ($validator->fails()){
-            return $this->sendError('Validation Error.', $validator->errors());
+            return $this->sendError('Erreur de validation.', $validator->errors());
         }
 
         $input = $request->all();
@@ -83,7 +84,7 @@ class UserController extends BaseController
 
         // Only super admins can create super admins
         if ($input['role'] === 'super_admin' && !auth()->user()->isSuperAdmin()) {
-            return $this->sendError('Access denied. Only super admins can create super admin users.', [], 403);
+            return $this->sendError('Accès refusé. Seuls les super administrateurs peuvent créer des utilisateurs super administrateur.', [], 403);
         }
 
         $user = User::create($input);
@@ -93,7 +94,7 @@ class UserController extends BaseController
         $success['email'] =  $user->email;
         $success['role'] =  $user->role_display_name;
 
-        return $this->sendResponse($success, "User $name registered successfully.");
+        return $this->sendResponse($success, "Utilisateur $name enregistré avec succès.");
     }
 
     /**
@@ -134,7 +135,7 @@ class UserController extends BaseController
     public function update(Request $request, User $user)
     {
         if (Gate::denies('update', $user)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         $validator = Validator::make($request->all(), [
@@ -146,7 +147,7 @@ class UserController extends BaseController
         ]);
 
         if ($validator->fails()) {
-            return $this->sendError('Validation Error.', $validator->errors());
+            return $this->sendError('Erreur de validation.', $validator->errors());
         }
 
         $user->firstname = $request->input('firstname');
@@ -160,7 +161,7 @@ class UserController extends BaseController
             
             // Only super admins can assign super admin role
             if ($newRole === 'super_admin' && !auth()->user()->isSuperAdmin()) {
-                return $this->sendError('Access denied. Only super admins can assign super admin role.', [], 403);
+                return $this->sendError('Accès refusé. Seuls les super administrateurs peuvent attribuer le rôle super administrateur.', [], 403);
             }
             
             $user->role = $newRole;
@@ -187,6 +188,63 @@ class UserController extends BaseController
     }
 
     /**
+     * Update the authenticated user's profile (password change).
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+
+        $validator = Validator::make($request->all(), [
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->sendError('Erreur de validation.', $validator->errors());
+        }
+
+        // Check if current password is correct
+        if (!Hash::check($request->current_password, $user->password)) {
+            return $this->sendError('Le mot de passe actuel est incorrect.', [], 400);
+        }
+
+        // Update password
+        $user->password = Hash::make($request->new_password);
+        $user->save();
+
+        return $this->sendResponse([], 'Mot de passe mis à jour avec succès.');
+    }
+
+    /**
+     * Get the authenticated user's profile information.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function profile()
+    {
+        $user = auth()->user();
+        
+        $profile = [
+            'id' => $user->id,
+            'name' => $user->firstname . ' ' . $user->lastname,
+            'firstname' => $user->firstname,
+            'lastname' => $user->lastname,
+            'email' => $user->email,
+            'is_admin' => $user->is_admin,
+            'role' => $user->role,
+            'role_display_name' => $user->role_display_name,
+            'email_verified_at' => $user->email_verified_at,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
+
+        return $this->sendResponse($profile, 'Profil récupéré avec succès.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
@@ -195,11 +253,29 @@ class UserController extends BaseController
     public function destroy(User $user)
     {
         if (Gate::denies('delete', $user)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         $user->delete();
-        return $this->sendResponse([], 'User deleted successfully.');
+        return $this->sendResponse([], 'Utilisateur supprimé avec succès.');
+    }
+
+    /**
+     * Delete the authenticated user's account.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function deleteProfile()
+    {
+        $user = auth()->user();
+        
+        // Delete user's bookings first
+        $user->bookings()->delete();
+        
+        // Delete the user
+        $user->delete();
+
+        return $this->sendResponse([], 'Compte supprimé avec succès.');
     }
 
     /**
@@ -211,7 +287,7 @@ class UserController extends BaseController
     public function authorizeUser(User $user)
     {
         if (Gate::denies('update', $user)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         $user->email_verified_at = now();
@@ -230,7 +306,7 @@ class UserController extends BaseController
     public function resendValidationEmail(User $user)
     {
         if (Gate::denies('update', $user)) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         $name = $user->firstname . " " . $user->lastname;

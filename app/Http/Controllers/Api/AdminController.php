@@ -19,7 +19,7 @@ class AdminController extends BaseController
     public function dashboard()
     {
         if (Gate::denies('view-dashboard')) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         try {
@@ -184,9 +184,9 @@ class AdminController extends BaseController
                 ]
             ];
 
-            return $this->sendResponse($data, 'Dashboard data retrieved successfully.');
+            return $this->sendResponse($data, 'Données du tableau de bord récupérées avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving dashboard data.', $e->getMessage());
+            return $this->sendError('Erreur lors de la récupération des données du tableau de bord.', $e->getMessage());
         }
     }
 
@@ -273,7 +273,7 @@ class AdminController extends BaseController
     public function bookingAnalytics(Request $request)
     {
         if (Gate::denies('view-analytics')) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         try {
@@ -316,9 +316,9 @@ class AdminController extends BaseController
                     ->get()
             ];
 
-            return $this->sendResponse($analytics, 'Booking analytics retrieved successfully.');
+            return $this->sendResponse($analytics, 'Analyses des réservations récupérées avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving booking analytics.', $e->getMessage());
+            return $this->sendError('Erreur lors de la récupération des analyses des réservations.', $e->getMessage());
         }
     }
 
@@ -328,7 +328,7 @@ class AdminController extends BaseController
     public function userAnalytics(Request $request)
     {
         if (Gate::denies('view-analytics')) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         try {
@@ -361,9 +361,9 @@ class AdminController extends BaseController
                     ->get(['id', 'firstname', 'lastname', 'email', 'created_at'])
             ];
 
-            return $this->sendResponse($analytics, 'User analytics retrieved successfully.');
+            return $this->sendResponse($analytics, 'Analyses des utilisateurs récupérées avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving user analytics.', $e->getMessage());
+            return $this->sendError('Erreur lors de la récupération des analyses des utilisateurs.', $e->getMessage());
         }
     }
 
@@ -373,7 +373,7 @@ class AdminController extends BaseController
     public function systemOverview()
     {
         if (Gate::denies('view-system-overview')) {
-            return $this->sendError('Access denied. Admin privileges required.', [], 403);
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
         try {
@@ -396,9 +396,9 @@ class AdminController extends BaseController
                 ]
             ];
 
-            return $this->sendResponse($overview, 'System overview retrieved successfully.');
+            return $this->sendResponse($overview, 'Aperçu du système récupéré avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Error retrieving system overview.', $e->getMessage());
+            return $this->sendError('Erreur lors de la récupération de l\'aperçu du système.', $e->getMessage());
         }
     }
 } 

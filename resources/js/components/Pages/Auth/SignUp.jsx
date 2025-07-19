@@ -40,7 +40,7 @@ export default function SignUp({authenticate}) {
 
         const registeredCallback = () => {
             setSeverity('success');
-            setAlert('User created successfully. Please wait until an administrator validates your inscription.');
+            setAlert('Utilisateur créé avec succès. Veuillez attendre qu\'un administrateur valide votre inscription.');
         }
 
         register(loginCredentials).then(registeredCallback).catch((error) => {
@@ -64,80 +64,76 @@ export default function SignUp({authenticate}) {
                     <LockOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
-                    Sign up
+                    Inscription
                 </Typography>
                 <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                            autoComplete="given-name"
-                            name="firstName"
-                            required
-                            fullWidth
-                            id="firstName"
-                            label="First Name"
-                            autoFocus
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <TextField
-                            required
-                            fullWidth
-                            id="lastName"
-                            label="Last Name"
-                            name="lastName"
-                            autoComplete="family-name"
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                            required
-                            fullWidth
-                            id="email"
-                            label="Email Address"
-                            name="email"
-                            autoComplete="email"
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                            required
-                            fullWidth
-                            name="password"
-                            label="Password"
-                            type="password"
-                            id="password"
-                            autoComplete="new-password"
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                            required
-                            fullWidth
-                            name="confirmPassword"
-                            label="Confirm Password"
-                            type="password"
-                            id="confirm-password"
-                            autoComplete="new-password"
-                            />
-                        </Grid>
-                    </Grid>
+                    <TextField
+                        autoComplete="given-name"
+                        name="firstName"
+                        required
+                        fullWidth
+                        id="firstName"
+                        label="Prénom"
+                        autoFocus
+                        margin="normal"
+                    />
+                    <TextField
+                        required
+                        fullWidth
+                        id="lastName"
+                        label="Nom"
+                        name="lastName"
+                        autoComplete="family-name"
+                        margin="normal"
+                    />
+                    <TextField
+                        required
+                        fullWidth
+                        id="email"
+                        label="Adresse email"
+                        name="email"
+                        autoComplete="email"
+                        margin="normal"
+                    />
+                    <TextField
+                        required
+                        fullWidth
+                        name="password"
+                        label="Mot de passe"
+                        type="password"
+                        id="password"
+                        autoComplete="new-password"
+                        margin="normal"
+                    />
+                    <TextField
+                        required
+                        fullWidth
+                        name="confirmPassword"
+                        label="Confirmer le mot de passe"
+                        type="password"
+                        id="confirm-password"
+                        autoComplete="new-password"
+                        margin="normal"
+                    />
+                    
                     <Button
-                    type="submit"
-                    fullWidth
-                    variant="contained"
-                    sx={{ mt: 3, mb: 2 }}
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{ mt: 3, mb: 2 }}
                     >
-                    Sign Up
+                        S'inscrire
                     </Button>
 
                     { alert && (
-                    <Alert severity={severity} sx={{ mb: 2 }}>{alert}</Alert>
+                        <Alert severity={severity} sx={{ mb: 2 }}>{alert}</Alert>
                     )}
 
-                    <Grid container justifyContent="flex-end">
+                    <Grid container justifyContent="center">
                         <Grid item>
-                            <Link component={RouterLink} to="/login" variant="body2">Already have an account? Sign in</Link>
+                            <Link component={RouterLink} to="/login" variant="body2">
+                                Vous avez déjà un compte ? Se connecter
+                            </Link>
                         </Grid>
                     </Grid>
                 </Box>

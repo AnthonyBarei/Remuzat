@@ -98,4 +98,5 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::delete('/reservations/{booking}', [BookingController::class, 'destroy']);
     Route::get('/user/profile', [UserController::class, 'profile']);
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
+    Route::delete('/user/profile', [UserController::class, 'deleteProfile']);
 });

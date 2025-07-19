@@ -4,11 +4,8 @@ import { useTheme } from '@mui/material/styles';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import moment from 'moment';
-import 'moment/locale/fr';
 import { WeekInfo } from './interfaces';
-
-// Set French locale for moment
-moment.locale('fr');
+import { toFrenchMonth } from './utils';
 
 const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onNextWeek: () => void, onToday: () => void, onBook: () => void, displayBookingForm: boolean}> 
 = ({week, onPrevWeek, onNextWeek, onToday, onBook, displayBookingForm}) => {
@@ -21,46 +18,47 @@ const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onN
         
         // If same month and year
         if (startDate.month() === endDate.month() && startDate.year() === endDate.year()) {
-            return `Semaine du ${startDate.format('D')} au ${endDate.format('D MMMM YYYY')}`;
+            return `Semaine du ${startDate.format('D')} au ${endDate.format('D')} ${toFrenchMonth(endDate.format('MMMM'))} ${endDate.format('YYYY')}`;
         }
         // If different months but same year
         else if (startDate.year() === endDate.year()) {
-            return `Semaine du ${startDate.format('D MMMM')} au ${endDate.format('D MMMM YYYY')}`;
+            return `Semaine du ${startDate.format('D')} ${toFrenchMonth(startDate.format('MMMM'))} au ${endDate.format('D')} ${toFrenchMonth(endDate.format('MMMM'))} ${endDate.format('YYYY')}`;
         }
         // If different years
         else {
-            return `Semaine du ${startDate.format('D MMMM YYYY')} au ${endDate.format('D MMMM YYYY')}`;
+            return `Semaine du ${startDate.format('D')} ${toFrenchMonth(startDate.format('MMMM'))} ${startDate.format('YYYY')} au ${endDate.format('D')} ${toFrenchMonth(endDate.format('MMMM'))} ${endDate.format('YYYY')}`;
         }
     };
     
     return (
         <Paper elevation={2} sx={{ 
-            bgcolor: 'paper.main', 
+            bgcolor: 'rgba(255,255,255,0.95)', 
+            backdropFilter: 'blur(10px)',
             borderRadius: 3, 
             p: 3, 
             mb: 3, 
             mt: 3, 
-            boxShadow: '0 2px 12px rgba(0,0,0,0.08)', 
+            boxShadow: '0 2px 20px rgba(0,0,0,0.1)', 
             border: `1px solid ${theme.palette.divider}` 
         }}>
             <Typography component="h6" variant="h6" gutterBottom sx={{
                 mb: 3, 
-                color: 'text.primary', 
-                fontWeight: 600
+                color: 'secondary.main', 
+                fontWeight: 700
             }}>
                 {formatWeekRange()}
             </Typography>
             <Box sx={{display: 'flex', justifyContent: 'space-between', mb: 3}}>
                 <Stack spacing={2} direction="row">
                     <IconButton 
-                        color="primary" 
+                        color="secondary" 
                         onClick={onPrevWeek} 
                         sx={{ 
-                            bgcolor: 'primary.main', 
-                            color: 'primary.contrastText', 
+                            bgcolor: 'secondary.main', 
+                            color: 'secondary.contrastText', 
                             borderRadius: 2,
                             '&:hover': {
-                                bgcolor: 'primary.dark'
+                                bgcolor: 'secondary.dark'
                             }
                         }}
                     >
@@ -70,29 +68,29 @@ const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onN
                         variant="outlined" 
                         onClick={onToday} 
                         sx={{ 
-                            borderColor: 'primary.main', 
-                            color: 'primary.main', 
+                            borderColor: 'secondary.main', 
+                            color: 'secondary.main', 
                             fontWeight: 600, 
                             borderRadius: 2, 
-                            bgcolor: 'background.default', 
+                            bgcolor: 'transparent', 
                             '&:hover': { 
-                                bgcolor: 'primary.main', 
-                                color: 'primary.contrastText', 
-                                borderColor: 'primary.main' 
+                                bgcolor: 'secondary.main', 
+                                color: 'secondary.contrastText', 
+                                borderColor: 'secondary.main' 
                             } 
                         }}
                     >
                         Aujourd'hui
                     </Button>
                     <IconButton 
-                        color="primary" 
+                        color="secondary" 
                         onClick={onNextWeek} 
                         sx={{ 
-                            bgcolor: 'primary.main', 
-                            color: 'primary.contrastText', 
+                            bgcolor: 'secondary.main', 
+                            color: 'secondary.contrastText', 
                             borderRadius: 2,
                             '&:hover': {
-                                bgcolor: 'primary.dark'
+                                bgcolor: 'secondary.dark'
                             }
                         }}
                     >
@@ -103,17 +101,16 @@ const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onN
                     variant={displayBookingForm ? 'outlined' : 'contained'} 
                     onClick={onBook}
                     sx={{
-                        bgcolor: displayBookingForm ? 'transparent' : 'primary.main',
-                        color: displayBookingForm ? 'primary.main' : 'primary.contrastText',
-                        borderColor: 'primary.main',
+                        bgcolor: displayBookingForm ? 'transparent' : 'secondary.main',
+                        color: displayBookingForm ? 'secondary.main' : 'secondary.contrastText',
+                        borderColor: 'secondary.main',
                         fontWeight: 700,
                         borderRadius: 2,
                         px: 3,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                         '&:hover': {
-                            bgcolor: 'primary.dark',
-                            color: 'primary.contrastText',
-                            borderColor: 'primary.dark'
+                            bgcolor: displayBookingForm ? 'secondary.main' : 'secondary.dark',
+                            color: 'secondary.contrastText',
+                            borderColor: displayBookingForm ? 'secondary.main' : 'secondary.dark'
                         }
                     }}
                 >

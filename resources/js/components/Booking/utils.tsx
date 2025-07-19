@@ -1,9 +1,41 @@
 import moment from "moment";
-import "moment/locale/fr";
 import { BookingInfo, BookingDetails, GapDetails, WeekInfo } from "./interfaces";
 
-// Set French locale for moment
-moment.locale('fr');
+// Manual French translations for days and months
+const FRENCH_DAYS: { [key: string]: string } = {
+    'Monday': 'lundi',
+    'Tuesday': 'mardi', 
+    'Wednesday': 'mercredi',
+    'Thursday': 'jeudi',
+    'Friday': 'vendredi',
+    'Saturday': 'samedi',
+    'Sunday': 'dimanche'
+};
+
+const FRENCH_MONTHS: { [key: string]: string } = {
+    'January': 'janvier',
+    'February': 'février',
+    'March': 'mars',
+    'April': 'avril',
+    'May': 'mai',
+    'June': 'juin',
+    'July': 'juillet',
+    'August': 'août',
+    'September': 'septembre',
+    'October': 'octobre',
+    'November': 'novembre',
+    'December': 'décembre'
+};
+
+// Function to convert English day name to French
+const toFrenchDay = (englishDay: string): string => {
+    return FRENCH_DAYS[englishDay] || englishDay;
+};
+
+// Function to convert English month name to French
+const toFrenchMonth = (englishMonth: string): string => {
+    return FRENCH_MONTHS[englishMonth] || englishMonth;
+};
 
 // get current week days TODO : fix monday is wrong date :/
 const getCurrentWeekDays = (): WeekInfo[] => {
@@ -17,9 +49,9 @@ const getCurrentWeekDays = (): WeekInfo[] => {
             ddmmyyyy: currentDate.format('DD/MM/YYYY'),
             day: currentDate.date(),
             month: currentDate.month() + 1,
-            month_name: currentDate.format('MMMM'),
+            month_name: toFrenchMonth(currentDate.format('MMMM')),
             year: currentDate.year(),
-            day_of_the_week: currentDate.format('dddd'),
+            day_of_the_week: toFrenchDay(currentDate.format('dddd')),
             day_of_the_month: currentDate.date(),
         };
         
@@ -41,9 +73,9 @@ const getWeekForDate = (date: string): WeekInfo[] => {
             ddmmyyyy: weekStart.format('DD/MM/YYYY'),
             day: weekStart.date(),
             month: weekStart.month() + 1,
-            month_name: weekStart.format('MMMM'),
+            month_name: toFrenchMonth(weekStart.format('MMMM')),
             year: weekStart.year(),
-            day_of_the_week: weekStart.format('dddd'),
+            day_of_the_week: toFrenchDay(weekStart.format('dddd')),
             day_of_the_month: weekStart.date(),
         };
         
@@ -62,9 +94,9 @@ const getPreviousWeekDays = (week: WeekInfo[]): WeekInfo[] => {
             ddmmyyyy: previousDay.format('DD/MM/YYYY'),
             day: previousDay.date(),
             month: previousDay.month() + 1,
-            month_name: previousDay.format('MMMM'),
+            month_name: toFrenchMonth(previousDay.format('MMMM')),
             year: previousDay.year(),
-            day_of_the_week: previousDay.format('dddd'),
+            day_of_the_week: toFrenchDay(previousDay.format('dddd')),
             day_of_the_month: previousDay.date(),
         };
         previousWeek.push(previousDayInfo);
@@ -82,9 +114,9 @@ const getNextWeekDays = (week: WeekInfo[]): WeekInfo[] => {
             ddmmyyyy: nextDay.format('DD/MM/YYYY'),
             day: nextDay.date(),
             month: nextDay.month() + 1,
-            month_name: nextDay.format('MMMM'),
+            month_name: toFrenchMonth(nextDay.format('MMMM')),
             year: nextDay.year(),
-            day_of_the_week: nextDay.format('dddd'),
+            day_of_the_week: toFrenchDay(nextDay.format('dddd')),
             day_of_the_month: nextDay.date(),
         };
         nextWeek.push(nextDayInfo);
@@ -144,4 +176,4 @@ const generateBookings = (): BookingInfo[] => {
     return bookings;
 };
 
-export { getCurrentWeekDays, getPreviousWeekDays, getNextWeekDays, generateBookings, getWeekForDate };
+export { getCurrentWeekDays, getPreviousWeekDays, getNextWeekDays, generateBookings, getWeekForDate, toFrenchDay, toFrenchMonth };

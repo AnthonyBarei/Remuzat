@@ -13,10 +13,6 @@ import {
     ListItemIcon,
     ListItemText,
     Container,
-    Avatar,
-    Menu,
-    MenuItem,
-    Tooltip,
     useTheme,
     useMediaQuery,
     Fab
@@ -29,12 +25,11 @@ import {
     Email,
     Settings,
     ChevronLeft,
-    AccountCircle,
-    Logout,
     Brightness4,
     Brightness7
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
+import LogoutButton from '../Layouts/Appbar/LogoutButton.jsx';
 
 const drawerWidth = 280;
 
@@ -63,7 +58,6 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const [open, setOpen] = useState(true);
-    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
     const navigate = useNavigate();
@@ -113,18 +107,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         }
     }, [open, isMobile]);
 
-    const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
-    };
 
-    const handleProfileMenuClose = () => {
-        setAnchorEl(null);
-    };
-
-    const handleLogout = () => {
-        // Handle logout logic
-        navigate('/login');
-    };
 
     const drawer = (
         <Box 
@@ -246,14 +229,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     </Box>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <Tooltip title="Profil">
-                            <IconButton
-                                onClick={handleProfileMenuOpen}
-                                sx={{ color: colors.provencalBlueGrey }}
-                            >
-                                <AccountCircle />
-                            </IconButton>
-                        </Tooltip>
+                        <LogoutButton />
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -338,26 +314,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 </Fab>
             )}
 
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleProfileMenuClose}
-                PaperProps={{
-                    sx: {
-                        bgcolor: 'white',
-                        border: `1px solid ${colors.softLavender}20`,
-                        borderRadius: 2,
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-                    }
-                }}
-            >
-                <MenuItem onClick={handleLogout} sx={{ color: colors.discreetPoppyRed }}>
-                    <ListItemIcon sx={{ color: colors.discreetPoppyRed }}>
-                        <Logout fontSize="small" />
-                    </ListItemIcon>
-                    Déconnexion
-                </MenuItem>
-            </Menu>
+
         </Box>
     );
 };
