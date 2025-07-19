@@ -23,8 +23,8 @@ return new class extends Migration
             $table->integer('duration');
             $table->string('type');
             $table->enum('status', ['pending', 'approved', 'cancelled'])->default('pending');
-            $table->integer('added_by');
-            $table->integer('validated_by')->nullable();
+            $table->unsignedBigInteger('added_by');
+            $table->unsignedBigInteger('validated_by')->nullable();
             $table->timestamps();
 
             $table->foreign('added_by')->references('id')->on('users');
