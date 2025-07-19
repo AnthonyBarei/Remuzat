@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Booking;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Support\Facades\Auth;
@@ -135,6 +136,15 @@ class BookingController extends BaseController
 
             // Load relationships for response
             $booking->load(['user', 'validatedBy']);
+
+            // Send admin notification email
+            try {
+                $emailService = new EmailService();
+                $emailService->sendAdminNewBookingEmail($booking, $overlapping);
+            } catch (\Exception $e) {
+                // Log the error but don't fail the booking creation
+                Log::error('Failed to send admin notification email: ' . $e->getMessage());
+            }
 
             // Check if there was an overlap warning
             if ($overlapping->isNotEmpty()) {

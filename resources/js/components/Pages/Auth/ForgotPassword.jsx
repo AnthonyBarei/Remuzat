@@ -1,35 +1,45 @@
 // React
 import * as React from 'react';
-import { Link as RouterLink } from 'react-router-dom';
+import { useNavigate, Link as RouterLink } from 'react-router-dom';
 // MUI
 import { Avatar, Button, CssBaseline, TextField, Link, Grid, Box, Typography, Container, Alert } from "@mui/material";
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import LockResetOutlinedIcon from '@mui/icons-material/LockResetOutlined';
 // Components
 import Copyright from '../../Layouts/Copyright';
-// Auth
-import { useAuth } from '../../../context/hooks/useAuth';
 
 export default function ForgotPassword() {
+    const navigate = useNavigate();
     const [email, setEmail] = React.useState('');
     const [alert, setAlert] = React.useState(null);
-    const [severity, setSeverity] = React.useState('error');
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [loading, setLoading] = React.useState(false);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setIsSubmitting(true);
+        setLoading(true);
         setAlert(null);
 
         try {
-            // For now, we'll just show a success message
-            // In a real implementation, this would call an API endpoint
-            setSeverity('success');
-            setAlert('Si un compte existe avec cette adresse email, vous recevrez un lien de réinitialisation.');
+            const response = await fetch('/api/forgot-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setAlert({ type: 'success', message: data.message });
+                setEmail('');
+            } else {
+                setAlert({ type: 'error', message: data.message || 'Une erreur est survenue.' });
+            }
         } catch (error) {
-            setSeverity('error');
-            setAlert('Une erreur est survenue. Veuillez réessayer.');
+            setAlert({ type: 'error', message: 'Erreur de connexion. Veuillez réessayer.' });
         } finally {
-            setIsSubmitting(false);
+            setLoading(false);
         }
     };
 
@@ -38,7 +48,7 @@ export default function ForgotPassword() {
             <CssBaseline />
             <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
                 <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-                    <LockOutlinedIcon />
+                    <LockResetOutlinedIcon />
                 </Avatar>
                 <Typography component="h1" variant="h5">
                     Mot de passe oublié
@@ -46,7 +56,7 @@ export default function ForgotPassword() {
                 <Typography variant="body2" sx={{ mt: 2, textAlign: 'center', color: 'text.secondary' }}>
                     Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
                 </Typography>
-                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
+                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                     <TextField 
                         margin="normal" 
                         required 
@@ -58,10 +68,13 @@ export default function ForgotPassword() {
                         autoFocus
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
                     />
 
                     {alert && (
-                        <Alert severity={severity} sx={{ mb: 2, mt: 2 }}>{alert}</Alert>
+                        <Alert severity={alert.type} sx={{ mb: 2, mt: 2 }}>
+                            {alert.message}
+                        </Alert>
                     )}
 
                     <Button 
@@ -69,15 +82,20 @@ export default function ForgotPassword() {
                         fullWidth 
                         variant="contained" 
                         sx={{ mt: 3, mb: 2 }}
-                        disabled={isSubmitting}
+                        disabled={loading}
                     >
-                        {isSubmitting ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
+                        {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
                     </Button>
 
-                    <Grid container justifyContent="center">
-                        <Grid item>
+                    <Grid container spacing={1}>
+                        <Grid item xs={12}>
                             <Link component={RouterLink} to="/login" variant="body2">
                                 Retour à la connexion
+                            </Link>
+                        </Grid>
+                        <Grid item xs={12}>
+                            <Link component={RouterLink} to="/signup" variant="body2">
+                                Vous n'avez pas de compte ? S'inscrire
                             </Link>
                         </Grid>
                     </Grid>

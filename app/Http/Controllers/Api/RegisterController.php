@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\API\BaseController as BaseController;
 use App\Models\User;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class RegisterController extends BaseController
@@ -33,6 +35,15 @@ class RegisterController extends BaseController
 
         $user = User::create($input);
 
+        // Send verification email
+        try {
+            $emailService = new EmailService();
+            $emailService->sendVerificationEmail($user);
+        } catch (\Exception $e) {
+            // Log the error but don't fail the registration
+            Log::error('Failed to send verification email: ' . $e->getMessage());
+        }
+
         $name = $user->firstname . (($user->lastname) ? " " . $user->lastname : "");
 
         // $success['token'] = $user->createToken('UserLoginToken')->plainTextToken;
@@ -40,6 +51,6 @@ class RegisterController extends BaseController
         $success['email'] = $user->email;
         $success['is_admin'] = $user->is_admin;
 
-        return $this->sendResponse($success, 'Utilisateur enregistré avec succès.');
+        return $this->sendResponse($success, 'Utilisateur enregistré avec succès. Un email de vérification a été envoyé à votre adresse email.');
     }
 }

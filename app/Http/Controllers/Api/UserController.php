@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use Illuminate\Http\Request;
 use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Services\EmailService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
@@ -311,14 +312,19 @@ class UserController extends BaseController
 
         $name = $user->firstname . " " . $user->lastname;
 
-        if ($user->email_verified_at) {
-            // User is already verified - just send a confirmation message
-            return $this->sendResponse([], "Email de validation renvoyé à $name (déjà autorisé).");
-        } else {
-            // User is not verified - mark as verified (in a real implementation, send actual email)
-            $user->email_verified_at = now();
-            $user->save();
-            return $this->sendResponse([], "Email de validation renvoyé à $name avec succès.");
+        try {
+            $emailService = new EmailService();
+            
+            if ($user->email_verified_at) {
+                // User is already verified - just send a confirmation message
+                return $this->sendResponse([], "Email de validation renvoyé à $name (déjà autorisé).");
+            } else {
+                // Send actual verification email
+                $emailService->resendVerificationEmail($user);
+                return $this->sendResponse([], "Email de validation renvoyé à $name avec succès.");
+            }
+        } catch (\Exception $e) {
+            return $this->sendError('Erreur lors de l\'envoi de l\'email de validation.', [], 500);
         }
     }
 }

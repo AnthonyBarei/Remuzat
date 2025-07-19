@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\SuperAdminController;
+use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\EmailVerificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -26,6 +28,15 @@ use App\Http\Controllers\Api\SuperAdminController;
 Route::post('/register', [RegisterController::class, 'register']);
 Route::post('/login', [LoginController::class, 'login']);
 Route::get('/authenticated', [LoginController::class, 'authenticated']);
+
+// Password reset routes
+Route::post('/forgot-password', [PasswordResetController::class, 'forgotPassword']);
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword']);
+Route::post('/verify-reset-token', [PasswordResetController::class, 'verifyResetToken']);
+
+// Email verification routes
+Route::post('/email/verify', [EmailVerificationController::class, 'verify']);
+Route::post('/email/resend', [EmailVerificationController::class, 'resend']);
 
 // Protected routes
 Route::group(['middleware' => ['auth:sanctum']], function () {
@@ -99,4 +110,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
     Route::get('/user/profile', [UserController::class, 'profile']);
     Route::put('/user/profile', [UserController::class, 'updateProfile']);
     Route::delete('/user/profile', [UserController::class, 'deleteProfile']);
+    
+    // Email verification check (protected)
+    Route::get('/email/check', [EmailVerificationController::class, 'check']);
 });
