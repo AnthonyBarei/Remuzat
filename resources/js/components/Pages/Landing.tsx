@@ -6,7 +6,10 @@ import {
     Button,
     Stack,
     useTheme,
-    useMediaQuery
+    useMediaQuery,
+    Card,
+    CardMedia,
+    Grid
 } from '@mui/material';
 import {
     Hiking,
@@ -46,6 +49,19 @@ const Landing: React.FC = () => {
             icon: <Church sx={{ fontSize: 32, color: 'info.main' }} />,
             title: 'Patrimoine & culture',
             description: 'Visitez l\'église, les ruelles pittoresques, ou partez à la découverte des villages voisins comme Nyons, Buis-les-Baronnies ou Roussas.'
+        }
+    ];
+
+    const galleryImages = [
+        {
+            src: '/images/remuzat2.webp',
+            alt: 'Place du village de Remuzat au soir',
+            title: 'Place du village au soir'
+        },
+        {
+            src: '/images/remuzat3.webp',
+            alt: 'Paysage de Remuzat',
+            title: 'Paysage local'
         }
     ];
 
@@ -101,6 +117,84 @@ const Landing: React.FC = () => {
                             Entouré de paysages sauvages et ensoleillés, ce havre de paix est l'endroit idéal pour se ressourcer loin du tumulte des grandes villes.
                         </Typography>
                     </Box>
+                </Container>
+            </Box>
+
+            {/* Image Gallery Section */}
+            <Box sx={{ py: { xs: 6, md: 8 }, bgcolor: 'grey.50' }}>
+                <Container maxWidth="lg">
+                    <Typography
+                        variant="h3"
+                        component="h2"
+                        align="center"
+                        sx={{ 
+                            mb: 6, 
+                            fontWeight: 600,
+                            color: 'text.primary',
+                            fontSize: { xs: '1.8rem', md: '2.2rem' }
+                        }}
+                    >
+                        📸 Découvrez Remuzat en images
+                    </Typography>
+                    
+                    <Grid container spacing={3}>
+                        {/* Placeholder for the first missing image */}
+                        <Grid item xs={12} md={4}>
+                            <Card 
+                                sx={{ 
+                                    height: 300,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    bgcolor: 'grey.200',
+                                    border: '2px dashed',
+                                    borderColor: 'grey.400'
+                                }}
+                            >
+                                <Box textAlign="center">
+                                    <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                                        Image à venir
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        remuzat1.webp
+                                    </Typography>
+                                </Box>
+                            </Card>
+                        </Grid>
+                        
+                        {/* Available images */}
+                        {galleryImages.map((image, index) => (
+                            <Grid item xs={12} md={4} key={index}>
+                                <Card 
+                                    sx={{ 
+                                        height: 300,
+                                        overflow: 'hidden',
+                                        transition: 'transform 0.3s ease-in-out',
+                                        '&:hover': {
+                                            transform: 'scale(1.02)'
+                                        }
+                                    }}
+                                >
+                                    <CardMedia
+                                        component="img"
+                                        image={image.src}
+                                        alt={image.alt}
+                                        sx={{
+                                            height: '100%',
+                                            objectFit: 'cover'
+                                        }}
+                                    />
+                                </Card>
+                                <Typography 
+                                    variant="body2" 
+                                    align="center" 
+                                    sx={{ mt: 1, color: 'text.secondary' }}
+                                >
+                                    {image.title}
+                                </Typography>
+                            </Grid>
+                        ))}
+                    </Grid>
                 </Container>
             </Box>
 
