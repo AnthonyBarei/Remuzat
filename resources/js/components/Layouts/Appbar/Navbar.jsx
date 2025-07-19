@@ -32,6 +32,8 @@ const ResponsiveAppBar = (props) => {
 
     // Debug admin status
     console.log('Navbar - isAdmin:', isAdmin, 'user:', user);
+    console.log('Navbar - user.is_admin:', user?.is_admin, 'user.role:', user?.role);
+    console.log('Navbar - Admin button should show:', isAdmin || user?.is_admin || user?.role === 'admin' || user?.role === 'super_admin');
 
     const handleOpenNavMenu = (event) => {
         setAnchorElNav(event.currentTarget);

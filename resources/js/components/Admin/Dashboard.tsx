@@ -79,7 +79,7 @@ interface DashboardData {
 const defaultDashboardData: DashboardData = {
     summary: {
         users: { total: 0, admins: 0, new_this_month: 0, growth: 0 },
-        reservations: { total: 0, pending: 0, approved: 0, cancelled: 0, upcoming: 0, growth: 0 },
+        reservations: { total: 0, pending: 0, approved: 0, cancelled: 0, upcoming: 0, upcoming_growth: 0, growth: 0 },
         occupancy: { rate: 0, growth: 0 },
         revenue: { total: 0, growth: 0 }
     },
@@ -172,6 +172,35 @@ const Dashboard: React.FC = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    useEffect(() => {
+        if (token) {
+            validateTokenAndFetchData();
+        }
+    }, [token]);
+
+    const validateTokenAndFetchData = async () => {
+        try {
+            // First validate the token
+            const response = await fetch('/api/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                // Token is invalid, this will trigger the auth interceptor
+                throw new Error('Token validation failed');
+            }
+
+            // Token is valid, proceed with data fetching
+            fetchDashboardData();
+        } catch (error) {
+            console.log('Token validation failed:', error);
+            // The auth interceptor will handle the logout
+        }
+    };
+
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
@@ -203,10 +232,6 @@ const Dashboard: React.FC = () => {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        fetchDashboardData();
-    }, [token]);
 
     if (loading) {
         return (

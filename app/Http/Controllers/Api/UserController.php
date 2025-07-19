@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\EmailService;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 
@@ -307,7 +308,7 @@ class UserController extends BaseController
      */
     public function resendValidationEmail(User $user)
     {
-        if (Gate::denies('update', $user)) {
+        if (Gate::denies('resendValidationEmail', $user)) {
             return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
         }
 
@@ -325,6 +326,17 @@ class UserController extends BaseController
                 return $this->sendResponse([], "Email de validation renvoyé à $name avec succès.");
             }
         } catch (\Exception $e) {
+            Log::error('Failed to resend validation email: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'exception' => $e
+            ]);
+            
+            // In development, provide more detailed error information
+            if (config('app.debug')) {
+                return $this->sendError('Erreur lors de l\'envoi de l\'email de validation: ' . $e->getMessage(), [], 500);
+            }
+            
             return $this->sendError('Erreur lors de l\'envoi de l\'email de validation.', [], 500);
         }
     }

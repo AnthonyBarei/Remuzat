@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Booking;
 use Carbon\Carbon;
@@ -66,9 +67,10 @@ class AdminController extends BaseController
             
             $upcomingStaysGrowth = $previousPeriodUpcoming > 0 ? (($currentPeriodUpcoming - $previousPeriodUpcoming) / $previousPeriodUpcoming) * 100 : 0;
 
-            // Recent bookings (last 7 days)
+            // Recent bookings (last 7 days) - only include bookings with valid users
             $recentBookings = Booking::with('user:id,firstname,lastname,email')
                 ->where('created_at', '>=', Carbon::now()->subDays(7))
+                ->whereHas('user') // Only include bookings with existing users
                 ->orderBy('created_at', 'desc')
                 ->take(5)
                 ->get(['id', 'added_by', 'start', 'end', 'status', 'created_at']);
@@ -187,6 +189,11 @@ class AdminController extends BaseController
 
             return $this->sendResponse($data, 'Données du tableau de bord récupérées avec succès.');
         } catch (\Exception $e) {
+            Log::error('Dashboard error: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return $this->sendError('Erreur lors de la récupération des données du tableau de bord.', $e->getMessage());
         }
     }
@@ -212,11 +219,12 @@ class AdminController extends BaseController
     {
         $mostActive = Booking::select('added_by', DB::raw('COUNT(*) as booking_count'))
             ->with('user:id,firstname,lastname')
+            ->whereHas('user') // Only include bookings with existing users
             ->groupBy('added_by')
             ->orderBy('booking_count', 'desc')
             ->first();
 
-        if (!$mostActive) {
+        if (!$mostActive || !$mostActive->user) {
             return null;
         }
 
@@ -311,6 +319,7 @@ class AdminController extends BaseController
                     ->get(),
                 'by_user' => $query->select('user_id', DB::raw('COUNT(*) as count'))
                     ->with('user:id,firstname,lastname')
+                    ->whereHas('user') // Only include bookings with existing users
                     ->groupBy('user_id')
                     ->orderBy('count', 'desc')
                     ->limit(10)

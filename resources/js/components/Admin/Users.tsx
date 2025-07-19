@@ -117,6 +117,35 @@ const Users: React.FC = () => {
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+    useEffect(() => {
+        if (token) {
+            validateTokenAndFetchData();
+        }
+    }, [token]);
+
+    const validateTokenAndFetchData = async () => {
+        try {
+            // First validate the token
+            const response = await fetch('/api/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                // Token is invalid, this will trigger the auth interceptor
+                throw new Error('Token validation failed');
+            }
+
+            // Token is valid, proceed with data fetching
+            fetchUsers();
+        } catch (error) {
+            console.log('Token validation failed:', error);
+            // The auth interceptor will handle the logout
+        }
+    };
+
     const fetchUsers = async () => {
         try {
             setLoading(true);
@@ -139,10 +168,6 @@ const Users: React.FC = () => {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        fetchUsers();
-    }, [token]);
 
     const handleOpenDialog = (user?: User) => {
         if (user) {

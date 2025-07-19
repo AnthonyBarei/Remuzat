@@ -72,8 +72,8 @@ interface Reservation {
     type: string;
     status: string;
     created_at: string;
-    user: User;
-    validated_by?: User;
+    user: User | null;
+    validated_by?: User | null;
     has_overlap?: boolean;
 }
 
@@ -118,8 +118,8 @@ const getStatusLabel = (status: string) => {
 };
 
 const Reservations: React.FC = () => {
-    const { user } = useAuth();
-    const token = (user as any).token;
+    const { user, authed, loading: authLoading } = useAuth();
+    const token = (user as any)?.token || localStorage.getItem('token') || sessionStorage.getItem('token');
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [statistics, setStatistics] = useState<Statistics>({ pending: 0, approved: 0, cancelled: 0, total: 0 });
     const [loading, setLoading] = useState(true);
@@ -199,10 +199,38 @@ const Reservations: React.FC = () => {
     };
 
     useEffect(() => {
-        fetchReservations();
-        fetchStatistics();
-    }, [page, rowsPerPage, filters]);
+        console.log('Reservations - useEffect triggered:', { authed, authLoading, token: !!token });
+        // Only fetch data if user is authenticated and not loading
+        if (authed && !authLoading && token) {
+            console.log('Reservations - Fetching data...');
+            // Validate token immediately before making API calls
+            validateTokenAndFetchData();
+        }
+    }, [page, rowsPerPage, filters, authed, authLoading, token]);
 
+    const validateTokenAndFetchData = async () => {
+        try {
+            // First validate the token
+            const response = await fetch('/api/me', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                // Token is invalid, this will trigger the auth interceptor
+                throw new Error('Token validation failed');
+            }
+
+            // Token is valid, proceed with data fetching
+            fetchReservations();
+            fetchStatistics();
+        } catch (error) {
+            console.log('Token validation failed:', error);
+            // The auth interceptor will handle the logout
+        }
+    };
 
 
     const handleValidate = async (id: number) => {
@@ -325,6 +353,28 @@ const Reservations: React.FC = () => {
         setPage(0);
     };
 
+    // Show loading state while authentication is being checked
+    if (authLoading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    // Show error if not authenticated
+    if (!authed || !token) {
+        console.log('Reservations - Auth debug:', { authed, token: !!token, user, authLoading });
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+                <Typography variant="h6" sx={{ color: colors.chestnutBrown }}>
+                    Erreur d'authentification
+                </Typography>
+            </Box>
+        );
+    }
+
+    // Show loading state while fetching data
     if (loading && reservations.length === 0) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
@@ -581,10 +631,10 @@ const Reservations: React.FC = () => {
                                     <TableCell>
                                         <Box>
                                             <Typography variant="body2" sx={{ fontWeight: 600, color: colors.chestnutBrown }}>
-                                                {reservation.user.firstname} {reservation.user.lastname}
+                                                {reservation.user ? `${reservation.user.firstname || ''} ${reservation.user.lastname || ''}`.trim() : 'Utilisateur inconnu'}
                                             </Typography>
                                             <Typography variant="caption" sx={{ color: colors.provencalBlueGrey }}>
-                                                {reservation.user.email}
+                                                {reservation.user?.email || 'Email non disponible'}
                                             </Typography>
                                         </Box>
                                     </TableCell>

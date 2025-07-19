@@ -66,20 +66,18 @@ class VerifyEmail extends Mailable
      */
     protected function generateVerificationUrl(User $user): string
     {
-        $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            [
-                'id' => $user->getKey(),
-                'hash' => sha1($user->getEmailForVerification()),
-            ]
-        );
-
-        // Convert to frontend URL if needed
-        $frontendUrl = config('app.frontend_url', config('app.url'));
-        if ($frontendUrl !== config('app.url')) {
-            $verificationUrl = str_replace(config('app.url'), $frontendUrl, $verificationUrl);
+        // Generate the verification URL for the frontend
+        $frontendUrl = config('email.frontend_url', config('app.url'));
+        
+        // Ensure we have a valid URL
+        if (empty($frontendUrl) || $frontendUrl === 'http://localhost') {
+            $frontendUrl = 'http://localhost:3000'; // Default fallback
         }
+        
+        $verificationUrl = $frontendUrl . '/email/verify?' . http_build_query([
+            'id' => $user->getKey(),
+            'hash' => sha1($user->getEmailForVerification()),
+        ]);
 
         return $verificationUrl;
     }

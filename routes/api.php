@@ -98,6 +98,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('/users/{user}/role', [SuperAdminController::class, 'updateUserRole']);
         Route::post('/users/{user}/promote', [SuperAdminController::class, 'promoteToAdmin']);
         Route::post('/users/{user}/demote', [SuperAdminController::class, 'demoteAdmin']);
+        Route::post('/users/{user}/resend-validation', [SuperAdminController::class, 'resendValidationEmail']);
         Route::get('/system/settings', [SuperAdminController::class, 'getSystemSettings']);
         Route::get('/system/logs', [SuperAdminController::class, 'getSystemLogs']);
     });

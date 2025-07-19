@@ -18,17 +18,15 @@ export default function EmailVerification() {
     // Get verification parameters from URL
     const id = searchParams.get('id');
     const hash = searchParams.get('hash');
-    const expires = searchParams.get('expires');
-    const signature = searchParams.get('signature');
 
     React.useEffect(() => {
-        if (id && hash && expires && signature) {
+        if (id && hash) {
             verifyEmail();
         } else {
             setVerifying(false);
             setAlert({ type: 'error', message: 'Lien de vérification invalide.' });
         }
-    }, [id, hash, expires, signature]);
+    }, [id, hash]);
 
     const verifyEmail = async () => {
         try {

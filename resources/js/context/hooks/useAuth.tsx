@@ -83,14 +83,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     setUser({ name: null, email: null, token: null });
                     setIsAdmin(false);
                     
-                    // Only redirect if trying to access protected routes
-                    const currentPath = window.location.pathname;
-                    const protectedRoutes = ['/reservation', '/admin'];
-                    const isProtectedRoute = protectedRoutes.some(route => currentPath.startsWith(route));
+                    // Clear stored token
+                    localStorage.removeItem('token');
+                    sessionStorage.removeItem('token');
                     
-                    if (isProtectedRoute && currentPath !== '/login') {
-                        window.location.href = '/login';
-                    }
+                    // Clear axios default header
+                    delete axios.defaults.headers.common['Authorization'];
+                    
+                    // Don't use window.location.href - let React Router handle navigation
+                    // The ProtectedRoutes component will handle the redirect
                 }
                 return Promise.reject(error);
             }
@@ -101,6 +102,58 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             axios.interceptors.response.eject(interceptor);
         };
     }, []);
+
+    // Listen for storage changes (logout from other tabs)
+    useEffect(() => {
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === 'token' && e.newValue === null) {
+                // Token was removed from another tab, logout here too
+                console.log('Token removed from another tab, logging out');
+                setAuthed(false);
+                setUser({ name: null, email: null, token: null });
+                setIsAdmin(false);
+                delete axios.defaults.headers.common['Authorization'];
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+    }, []);
+
+    // More frequent authentication check (every 30 seconds)
+    useEffect(() => {
+        if (authed) {
+            const interval = setInterval(async () => {
+                try {
+                    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                    if (!token) {
+                        // No token found, clear auth state
+                        console.log('No token found during periodic check, logging out');
+                        setAuthed(false);
+                        setUser({ name: null, email: null, token: null });
+                        setIsAdmin(false);
+                        delete axios.defaults.headers.common['Authorization'];
+                        return;
+                    }
+
+                    // Verify token is still valid
+                    const config = { headers: { 'Authorization': 'Bearer ' + token } };
+                    await axios.get('/api/me', config);
+                } catch (error) {
+                    // Token is invalid or expired, clear auth state
+                    console.log('Periodic auth check failed:', error);
+                    setAuthed(false);
+                    setUser({ name: null, email: null, token: null });
+                    setIsAdmin(false);
+                    localStorage.removeItem('token');
+                    sessionStorage.removeItem('token');
+                    delete axios.defaults.headers.common['Authorization'];
+                }
+            }, 30 * 1000); // Check every 30 seconds instead of 5 minutes
+
+            return () => clearInterval(interval);
+        }
+    }, [authed]);
 
     // Runs once when the component first mounts
     useEffect(() => { loginCheck(); }, []);
@@ -122,7 +175,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const initUser = async (): Promise<void> => {
         try {
-            const config = { headers: { 'Authorization': 'Bearer ' + user.token }, };
+            // Get token from localStorage or sessionStorage
+            const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+            if (!token) {
+                console.log('No token found, user not authenticated');
+                setAuthed(false);
+                setLoading(false);
+                return;
+            }
+
+            // Set up axios default authorization header
+            axios.defaults.headers.common['Authorization'] = 'Bearer ' + token;
+            
+            const config = { headers: { 'Authorization': 'Bearer ' + token }, };
             const activeUser = await initUserAsync(config);
             if (activeUser) {
                 console.log(activeUser);
@@ -132,6 +197,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         } catch (error) {
             console.log('Init user failed:', error);
             setAuthed(false);
+            setUser({ name: null, email: null, token: null });
+            setIsAdmin(false);
+            // Clear invalid token
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+            // Clear axios default header
+            delete axios.defaults.headers.common['Authorization'];
             setLoading(false);
         }
     };
@@ -142,6 +214,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if (logged_in) {
                 console.log(logged_in);
                 setAuthed(true);
+                // Store token for future use
+                if (user.token) {
+                    localStorage.setItem('token', user.token);
+                    // Set up axios default authorization header
+                    axios.defaults.headers.common['Authorization'] = 'Bearer ' + user.token;
+                }
             }
         } catch (error) {
             throw new Error(error as string);
@@ -156,12 +234,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 setAuthed(false);
                 setUser({ name: null, email: null, token: null });
                 setIsAdmin(false);
+                // Clear stored token
+                localStorage.removeItem('token');
+                sessionStorage.removeItem('token');
+                // Clear axios default header
+                delete axios.defaults.headers.common['Authorization'];
+                
+                // Trigger storage event for other tabs
+                const oldToken = (config as any)?.headers?.Authorization?.replace('Bearer ', '') || null;
+                window.dispatchEvent(new StorageEvent('storage', {
+                    key: 'token',
+                    newValue: null,
+                    oldValue: oldToken
+                }));
             }
         } catch (error) {
             // Even if logout fails, clear the auth state
+            console.log('Logout failed, clearing auth state anyway:', error);
             setAuthed(false);
             setUser({ name: null, email: null, token: null });
             setIsAdmin(false);
+            // Clear stored token
+            localStorage.removeItem('token');
+            sessionStorage.removeItem('token');
+            // Clear axios default header
+            delete axios.defaults.headers.common['Authorization'];
+            
+            // Trigger storage event for other tabs
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: 'token',
+                newValue: null,
+                oldValue: null
+            }));
+            
             if (!user.token) {
                 throw new Error('Token non trouvé.');
             } else {
@@ -224,9 +329,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     userData.name = createFullName(userData);
                 }
                 
+                // Add token to user data from localStorage/sessionStorage
+                const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                if (token) {
+                    userData.token = token;
+                }
+                
+                console.log('Init user response userData:', userData);
                 setUser(userData);
                 // Set admin status based on user data
-                setIsAdmin(userData.is_admin || userData.role === 'admin' || userData.role === 'super_admin');
+                const adminStatus = userData.is_admin || userData.role === 'admin' || userData.role === 'super_admin';
+                console.log('Setting admin status from init:', adminStatus, 'based on:', { is_admin: userData.is_admin, role: userData.role });
+                setIsAdmin(adminStatus);
                 resolve(resp.message);
             }).catch((error) => {
                 console.log('Init user error:', error);
@@ -247,9 +361,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     userData.name = createFullName(userData);
                 }
                 
+                console.log('Login response userData:', userData);
                 setUser(userData);
+                // Store token for future requests
+                if (userData.token) {
+                    localStorage.setItem('token', userData.token);
+                }
                 // Set admin status based on user data
-                setIsAdmin(userData.is_admin || userData.role === 'admin' || userData.role === 'super_admin');
+                const adminStatus = userData.is_admin || userData.role === 'admin' || userData.role === 'super_admin';
+                console.log('Setting admin status:', adminStatus, 'based on:', { is_admin: userData.is_admin, role: userData.role });
+                setIsAdmin(adminStatus);
                 resolve(resp.message);
             }).catch((error) => {
                 if (error.response) {

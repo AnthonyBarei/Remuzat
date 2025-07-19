@@ -45,12 +45,15 @@ export default function ResetPassword() {
                 body: JSON.stringify({ email, token }),
             });
 
+            const data = await response.json();
+
             if (response.ok) {
                 setTokenValid(true);
             } else {
-                setAlert({ type: 'error', message: 'Lien de réinitialisation invalide ou expiré.' });
+                setAlert({ type: 'error', message: data.message || 'Lien de réinitialisation invalide ou expiré.' });
             }
         } catch (error) {
+            console.error('Token verification error:', error);
             setAlert({ type: 'error', message: 'Erreur de connexion. Veuillez réessayer.' });
         }
     };

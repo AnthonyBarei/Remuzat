@@ -11,6 +11,7 @@ use App\Notifications\NewBookingNotification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Log;
 
 class EmailService
 {
@@ -19,7 +20,16 @@ class EmailService
      */
     public function sendVerificationEmail(User $user): void
     {
-        Mail::to($user->email)->send(new VerifyEmail($user));
+        try {
+            Mail::to($user->email)->send(new VerifyEmail($user));
+        } catch (\Exception $e) {
+            Log::error('Failed to send verification email: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'exception' => $e
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -27,9 +37,27 @@ class EmailService
      */
     public function sendPasswordResetEmail(User $user): string
     {
-        $token = Password::createToken($user);
-        Mail::to($user->email)->send(new ResetPassword($user, $token));
-        return $token;
+        try {
+            $token = Password::createToken($user);
+            
+            // Debug: Log the token creation
+            Log::info('Password reset token created in EmailService', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'token' => $token,
+                'token_length' => strlen($token)
+            ]);
+            
+            Mail::to($user->email)->send(new ResetPassword($user, $token));
+            return $token;
+        } catch (\Exception $e) {
+            Log::error('Failed to send password reset email: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'exception' => $e
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -69,8 +97,17 @@ class EmailService
      */
     public function resendVerificationEmail(User $user): void
     {
-        if (!$user->hasVerifiedEmail()) {
-            $this->sendVerificationEmail($user);
+        try {
+            if (!$user->hasVerifiedEmail()) {
+                $this->sendVerificationEmail($user);
+            }
+        } catch (\Exception $e) {
+            Log::error('Failed to resend verification email: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'exception' => $e
+            ]);
+            throw $e;
         }
     }
 

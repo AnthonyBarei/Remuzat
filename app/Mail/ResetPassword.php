@@ -66,20 +66,18 @@ class ResetPassword extends Mailable
      */
     protected function generateResetUrl(User $user, string $token): string
     {
-        $resetUrl = URL::temporarySignedRoute(
-            'password.reset',
-            now()->addMinutes(60),
-            [
-                'email' => $user->email,
-                'token' => $token,
-            ]
-        );
-
-        // Convert to frontend URL if needed
-        $frontendUrl = config('app.frontend_url', config('app.url'));
-        if ($frontendUrl !== config('app.url')) {
-            $resetUrl = str_replace(config('app.url'), $frontendUrl, $resetUrl);
+        // Generate the reset URL for the frontend
+        $frontendUrl = config('email.frontend_url', config('app.url'));
+        
+        // Ensure we have a valid URL
+        if (empty($frontendUrl) || $frontendUrl === 'http://localhost') {
+            $frontendUrl = 'http://localhost:3000'; // Default fallback
         }
+        
+        $resetUrl = $frontendUrl . '/reset-password?' . http_build_query([
+            'email' => $user->email,
+            'token' => $token,
+        ]);
 
         return $resetUrl;
     }

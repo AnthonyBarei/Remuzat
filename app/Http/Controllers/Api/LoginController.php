@@ -40,6 +40,10 @@ class LoginController extends BaseController
                 $success['token'] = $user->createToken('UserLoginToken')->plainTextToken;
                 $success['name'] = $name;
                 $success['email'] = $user->email;
+                $success['firstname'] = $user->firstname;
+                $success['lastname'] = $user->lastname;
+                $success['is_admin'] = $user->is_admin;
+                $success['role'] = $user->role;
 
                 return $this->sendResponse($success, 'Connexion réussie.');
             } else {

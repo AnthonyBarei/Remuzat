@@ -148,4 +148,27 @@ class UserPolicy
     {
         return $user->isSuperAdmin() && $targetUser->id !== $user->id;
     }
+
+    /**
+     * Determine if the user can resend validation emails.
+     *
+     * @param  \App\Models\User  $user
+     * @param  \App\Models\User  $targetUser
+     * @return bool
+     */
+    public function resendValidationEmail(User $user, User $targetUser)
+    {
+        // Only admins can resend validation emails
+        if (!$user->isAdmin()) {
+            return false;
+        }
+
+        // Super admins can resend to anyone except themselves
+        if ($user->isSuperAdmin()) {
+            return $user->id !== $targetUser->id;
+        }
+
+        // Regular admins can resend to regular users and other admins, but not super admins
+        return !$targetUser->isSuperAdmin();
+    }
 }

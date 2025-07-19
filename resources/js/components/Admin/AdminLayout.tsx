@@ -22,14 +22,13 @@ import {
     Dashboard,
     BookOnline,
     People,
-    Email,
-    Settings,
     ChevronLeft,
     Brightness4,
     Brightness7
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LogoutButton from '../Layouts/Appbar/LogoutButton.jsx';
+import { useAuth } from '../../context/hooks/useAuth';
 
 const drawerWidth = 280;
 
@@ -48,8 +47,6 @@ const menuItems = [
     { text: 'Tableau de bord', icon: <Dashboard />, path: '/admin' },
     { text: 'Réservations', icon: <BookOnline />, path: '/admin/reservations' },
     { text: 'Utilisateurs', icon: <People />, path: '/admin/users' },
-    { text: 'Emails', icon: <Email />, path: '/admin/emails' },
-    { text: 'Paramètres', icon: <Settings />, path: '/admin/settings' },
 ];
 
 interface AdminLayoutProps {
@@ -63,6 +60,46 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const drawerRef = useRef<HTMLDivElement>(null);
+    const { authed, isAdmin, loading } = useAuth();
+
+    // Check authentication and admin status
+    useEffect(() => {
+        if (!loading) {
+            if (!authed) {
+                // User is not authenticated, redirect to login
+                navigate('/login', { state: { from: location } });
+                return;
+            }
+            
+            if (!isAdmin) {
+                // User is not admin, redirect to reservation page
+                navigate('/reservation');
+                return;
+            }
+        }
+    }, [authed, isAdmin, loading, navigate, location]);
+
+    // Show loading state while checking authentication
+    if (loading) {
+        return (
+            <Box sx={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh',
+                bgcolor: colors.beigeStone
+            }}>
+                <Typography variant="h6" sx={{ color: colors.chestnutBrown }}>
+                    Chargement...
+                </Typography>
+            </Box>
+        );
+    }
+
+    // Don't render admin layout if user is not authenticated or not admin
+    if (!authed || !isAdmin) {
+        return null;
+    }
 
     // Auto-close drawer on mobile when screen size changes
     useEffect(() => {

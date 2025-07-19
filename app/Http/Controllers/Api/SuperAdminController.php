@@ -324,4 +324,39 @@ class SuperAdminController extends BaseController
             'security_score' => 'A+'
         ];
     }
+
+    /**
+     * Resend validation email to user (super admin version).
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function resendValidationEmail(User $user)
+    {
+        if (Gate::denies('manage-admins')) {
+            return $this->sendError('Accès refusé. Privilèges super administrateur requis.', [], 403);
+        }
+
+        // Super admins cannot resend to themselves
+        if (auth()->user()->id === $user->id) {
+            return $this->sendError('Vous ne pouvez pas vous renvoyer un email de validation à vous-même.', [], 403);
+        }
+
+        $name = $user->firstname . " " . $user->lastname;
+
+        try {
+            $emailService = new \App\Services\EmailService();
+            
+            if ($user->email_verified_at) {
+                // User is already verified - just send a confirmation message
+                return $this->sendResponse([], "Email de validation renvoyé à $name (déjà autorisé).");
+            } else {
+                // Send actual verification email
+                $emailService->resendVerificationEmail($user);
+                return $this->sendResponse([], "Email de validation renvoyé à $name avec succès.");
+            }
+        } catch (\Exception $e) {
+            return $this->sendError('Erreur lors de l\'envoi de l\'email de validation.', [], 500);
+        }
+    }
 }

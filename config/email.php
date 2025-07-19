@@ -11,9 +11,12 @@ return [
     | messages sent by your application. Alternative mailers may be setup
     | and used as needed; however, this mailer will be used by default.
     |
+    | In local environment, emails are logged to storage/logs/laravel.log
+    | instead of being sent to avoid accidental emails during development.
+    |
     */
 
-    'default' => env('MAIL_MAILER', 'smtp'),
+    'default' => env('MAIL_MAILER', env('APP_ENV') === 'local' ? 'log' : 'smtp'),
 
     /*
     |--------------------------------------------------------------------------
