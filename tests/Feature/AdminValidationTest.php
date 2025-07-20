@@ -187,4 +187,60 @@ class AdminValidationTest extends TestCase
             'message' => 'Connexion réussie.',
         ]);
     }
+
+    public function test_remember_me_functionality()
+    {
+        // Create an authorized user
+        $user = User::factory()->create([
+            'admin_validated' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        // Login with remember me enabled
+        $response = $this->post('/api/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'remember' => true,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Connexion réussie.',
+        ]);
+
+        // Verify that the user is authenticated
+        $this->assertAuthenticated();
+        
+        // Test that the remember parameter is accepted
+        $this->assertTrue($response->json('success'));
+    }
+
+    public function test_login_without_remember_me()
+    {
+        // Create an authorized user
+        $user = User::factory()->create([
+            'admin_validated' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        // Login without remember me
+        $response = $this->post('/api/login', [
+            'email' => $user->email,
+            'password' => 'password',
+            'remember' => false,
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'message' => 'Connexion réussie.',
+        ]);
+
+        // Verify that the user is authenticated
+        $this->assertAuthenticated();
+        
+        // Test that the remember parameter is accepted
+        $this->assertTrue($response->json('success'));
+    }
 }

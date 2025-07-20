@@ -14,6 +14,7 @@ export default function Login({authenticate}) {
     const navigate = useNavigate();
     const { authed, login } = useAuth();
     const [alert, setAlert] = React.useState(false);
+    const [rememberMe, setRememberMe] = React.useState(false);
 
     const authenticatedCallback = () => {
         let {from} = location.state || {from: {pathname: '/reservation'}}
@@ -29,6 +30,7 @@ export default function Login({authenticate}) {
         const loginCredentials = {
             email: formData.get('email'),
             password: formData.get('password'),
+            remember: rememberMe,
         };
 
         login(loginCredentials).then(authenticatedCallback).catch((error) => {
@@ -70,7 +72,13 @@ export default function Login({authenticate}) {
                     />
 
                     <FormControlLabel 
-                        control={<Checkbox value="remember" color="primary" />} 
+                        control={
+                            <Checkbox 
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                                color="primary" 
+                            />
+                        } 
                         label="Se souvenir de moi"
                         sx={{ mt: 1 }}
                     />

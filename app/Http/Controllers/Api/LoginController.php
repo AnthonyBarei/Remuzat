@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\BaseController as BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cookie;
 use App\Models\User;
 
 class LoginController extends BaseController
@@ -25,13 +26,16 @@ class LoginController extends BaseController
         $validator = Validator::make($request->all(), [
             'email' => 'required|string',
             'password' => 'required|string',
+            'remember' => 'boolean',
         ]);
 
         if ($validator->fails()) {
             return response()->json(['status' => false, 'message' => 'Veuillez corriger les erreurs', 'errors' => $validator->errors()], 500);
         }
 
-        if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
+        $remember = $request->boolean('remember', false);
+
+        if (Auth::attempt(['email' => $request->email, 'password' => $request->password], $remember)) {
             $user = Auth::user();
 
             if ($user instanceof \App\Models\User) {
@@ -71,8 +75,11 @@ class LoginController extends BaseController
         auth('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
-        return response()->json(['status' => true, 'message' => 'Déconnexion réussie']);
+        
+        // Clear the remember me cookie
+        $response = response()->json(['status' => true, 'message' => 'Déconnexion réussie']);
+        
+        return $response->withCookie(Cookie::forget('remember_web'));
     }
 
     public function me()
