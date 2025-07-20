@@ -4,8 +4,9 @@ import Navigation from './BookingNavigation';
 import BookingTable from './BookingTable';
 import MainLayout from '../Layouts/Main';
 import { WeekInfo, BookingInfo } from './interfaces';
-import { getCurrentWeekDays, getNextWeekDays, getPreviousWeekDays } from './utils';
+import { getCurrentWeekDays, getNextWeekDays, getPreviousWeekDays, getWeekForDate } from './utils';
 import BookingAddForm from './BookingAdd';
+import moment from 'moment';
 
 const week = getCurrentWeekDays();
 
@@ -81,6 +82,12 @@ const Booking: React.FC = () => {
         setCurrentWeek(week);
     };
 
+    const onWeekSelected = (date: moment.Moment) => {
+        setIsTransitioning(true);
+        const week = getWeekForDate(date.format('YYYY-MM-DD'));
+        setCurrentWeek(week);
+    };
+
     const onBook = () => {
         setDisplayBookingForm((displayBookingForm) => !displayBookingForm);
     };
@@ -99,6 +106,7 @@ const Booking: React.FC = () => {
                 onToday={onToday} 
                 onBook={onBook} 
                 displayBookingForm={displayBookingForm}
+                onWeekSelected={onWeekSelected}
             />
             
             {displayBookingForm && (

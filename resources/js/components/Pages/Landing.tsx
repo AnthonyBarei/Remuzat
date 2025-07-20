@@ -54,6 +54,11 @@ const Landing: React.FC = () => {
 
     const galleryImages = [
         {
+            src: '/images/remuzat1.webp',
+            alt: 'La maison',
+            title: 'La maison'
+        },
+        {
             src: '/images/remuzat2.webp',
             alt: 'Place du village de Remuzat au soir',
             title: 'Place du village au soir'
@@ -138,31 +143,6 @@ const Landing: React.FC = () => {
                     </Typography>
                     
                     <Grid container spacing={3}>
-                        {/* Placeholder for the first missing image */}
-                        <Grid item xs={12} md={4}>
-                            <Card 
-                                sx={{ 
-                                    height: 300,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    bgcolor: 'grey.200',
-                                    border: '2px dashed',
-                                    borderColor: 'grey.400'
-                                }}
-                            >
-                                <Box textAlign="center">
-                                    <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
-                                        Image à venir
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        remuzat1.webp
-                                    </Typography>
-                                </Box>
-                            </Card>
-                        </Grid>
-                        
-                        {/* Available images */}
                         {galleryImages.map((image, index) => (
                             <Grid item xs={12} md={4} key={index}>
                                 <Card 

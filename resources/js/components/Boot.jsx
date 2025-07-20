@@ -5,6 +5,8 @@ import { BrowserRouter } from "react-router-dom";
 // MUI
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import { CssBaseline } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment';
 // Components
 import App from './App';
 // Theme
@@ -20,11 +22,13 @@ const Boot = () => {
         <div className='app'>
             <ThemeProvider theme={theme}>
                 <CssBaseline />
-                <BrowserRouter>
-                    <AuthProvider>
-                        <App/>
-                    </AuthProvider>
-                </BrowserRouter>
+                <LocalizationProvider dateAdapter={AdapterMoment}>
+                    <BrowserRouter>
+                        <AuthProvider>
+                            <App/>
+                        </AuthProvider>
+                    </BrowserRouter>
+                </LocalizationProvider>
             </ThemeProvider>
         </div>
     );

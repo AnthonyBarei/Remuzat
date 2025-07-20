@@ -6,9 +6,10 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import moment from 'moment';
 import { WeekInfo } from './interfaces';
 import { toFrenchMonth } from './utils';
+import CalendarSelector from './CalendarSelector';
 
-const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onNextWeek: () => void, onToday: () => void, onBook: () => void, displayBookingForm: boolean}> 
-= ({week, onPrevWeek, onNextWeek, onToday, onBook, displayBookingForm}) => {
+const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onNextWeek: () => void, onToday: () => void, onBook: () => void, displayBookingForm: boolean, onWeekSelected: (date: moment.Moment) => void}> 
+= ({week, onPrevWeek, onNextWeek, onToday, onBook, displayBookingForm, onWeekSelected}) => {
     const theme = useTheme();
     
     // Format the week range in French
@@ -96,6 +97,10 @@ const BookingNavigation: React.FC<{week: WeekInfo[], onPrevWeek: () => void, onN
                     >
                         <ArrowForwardIosIcon fontSize="small"/>
                     </IconButton>
+                    <CalendarSelector 
+                        onWeekSelected={onWeekSelected}
+                        currentWeek={moment(week[0].ddmmyyyy, "DD/MM/YYYY")}
+                    />
                 </Stack>
                 <Button 
                     variant={displayBookingForm ? 'outlined' : 'contained'} 
