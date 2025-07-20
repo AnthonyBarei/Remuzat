@@ -282,7 +282,7 @@ class UserController extends BaseController
     }
 
     /**
-     * Authorize a user (mark email as verified).
+     * Authorize a user (mark email as verified and admin validated).
      *
      * @param  \App\Models\User  $user
      * @return \Illuminate\Http\Response
@@ -294,6 +294,7 @@ class UserController extends BaseController
         }
 
         $user->email_verified_at = now();
+        $user->admin_validated = true;
         $user->save();
 
         $name = $user->firstname . " " . $user->lastname;
@@ -339,5 +340,48 @@ class UserController extends BaseController
             
             return $this->sendError('Erreur lors de l\'envoi de l\'email de validation.', [], 500);
         }
+    }
+
+    /**
+     * Reject a user (delete their account).
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function rejectUser(User $user)
+    {
+        if (Gate::denies('delete', $user)) {
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
+        }
+
+        $name = $user->firstname . " " . $user->lastname;
+        
+        // Delete user's bookings first
+        $user->bookings()->delete();
+        
+        // Delete the user
+        $user->delete();
+
+        return $this->sendResponse([], "Utilisateur $name rejeté et supprimé avec succès.");
+    }
+
+    /**
+     * Get pending users (users who need admin validation).
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function getPendingUsers()
+    {
+        if (Gate::denies('viewAny', User::class)) {
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
+        }
+
+        $pendingUsers = User::where('admin_validated', false)
+            ->where('is_admin', false)
+            ->whereNotIn('role', ['admin', 'super_admin'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return $this->sendResponse(UserResource::collection($pendingUsers), 'Utilisateurs en attente récupérés avec succès.');
     }
 }

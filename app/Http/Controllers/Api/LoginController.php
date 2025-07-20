@@ -28,13 +28,24 @@ class LoginController extends BaseController
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => false, 'message' => 'Corrigez les erreurs', 'errors' => $validator->errors()], 500);
+            return response()->json(['status' => false, 'message' => 'Veuillez corriger les erreurs', 'errors' => $validator->errors()], 500);
         }
 
         if (Auth::attempt(['email' => $request->email, 'password' => $request->password])) {
             $user = Auth::user();
 
             if ($user instanceof \App\Models\User) {
+                // Check if user can access the system
+                if (!$user->canAccessBookingSystem()) {
+                    Auth::logout();
+                    
+                    if (!$user->hasVerifiedEmail()) {
+                        return $this->sendError('Email non vérifié.', ['error' => 'Veuillez vérifier votre adresse email avant de vous connecter.'], 403);
+                    } else {
+                        return $this->sendError('Compte en attente de validation.', ['error' => 'Votre compte est en attente de validation par un administrateur.'], 403);
+                    }
+                }
+
                 $name = $user->firstname . (($user->lastname) ? " " . $user->lastname : "");
 
                 $success['token'] = $user->createToken('UserLoginToken')->plainTextToken;
@@ -44,6 +55,7 @@ class LoginController extends BaseController
                 $success['lastname'] = $user->lastname;
                 $success['is_admin'] = $user->is_admin;
                 $success['role'] = $user->role;
+                $success['admin_validated'] = $user->admin_validated;
 
                 return $this->sendResponse($success, 'Connexion réussie.');
             } else {
@@ -60,7 +72,7 @@ class LoginController extends BaseController
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->json(['status' => true, 'message' => 'Déconnecté']);
+        return response()->json(['status' => true, 'message' => 'Déconnexion réussie']);
     }
 
     public function me()

@@ -82,6 +82,7 @@ interface User {
     role?: string;
     role_display_name?: string;
     email_verified_at?: string;
+    admin_validated?: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -116,6 +117,7 @@ const Users: React.FC = () => {
     });
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [filterPending, setFilterPending] = useState(false);
 
     useEffect(() => {
         if (token) {
@@ -149,7 +151,8 @@ const Users: React.FC = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const response = await fetch('/api/users', {
+            const url = filterPending ? '/api/users/pending' : '/api/users';
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -332,6 +335,32 @@ const Users: React.FC = () => {
         }
     };
 
+    const handleRejectUser = async (userId: number) => {
+        if (!window.confirm('Êtes-vous sûr de vouloir rejeter cet utilisateur ? Cette action supprimera définitivement son compte.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/users/${userId}/reject`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors du rejet de l\'utilisateur');
+            }
+
+            const result = await response.json();
+            setSuccess(result.message || 'Utilisateur rejeté avec succès');
+            fetchUsers();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        }
+    };
+
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, user: User) => {
         setAnchorEl(event.currentTarget);
         setSelectedUser(user);
@@ -359,17 +388,36 @@ const Users: React.FC = () => {
                 }}>
                     Gestion des utilisateurs
                 </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={() => handleOpenDialog()}
-                    sx={{
-                        bgcolor: colors.lightOliveGreen,
-                        '&:hover': { bgcolor: colors.lightOliveGreen + 'DD' }
-                    }}
-                >
-                    Ajouter un utilisateur
-                </Button>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Button
+                        variant={filterPending ? "contained" : "outlined"}
+                        onClick={() => {
+                            setFilterPending(!filterPending);
+                            setTimeout(() => fetchUsers(), 0);
+                        }}
+                        sx={{
+                            bgcolor: filterPending ? colors.paleTerracotta : 'transparent',
+                            color: filterPending ? 'white' : colors.paleTerracotta,
+                            borderColor: colors.paleTerracotta,
+                            '&:hover': { 
+                                bgcolor: filterPending ? colors.paleTerracotta + 'DD' : colors.paleTerracotta + '10' 
+                            }
+                        }}
+                    >
+                        {filterPending ? 'Tous les utilisateurs' : 'Utilisateurs en attente'}
+                    </Button>
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={() => handleOpenDialog()}
+                        sx={{
+                            bgcolor: colors.lightOliveGreen,
+                            '&:hover': { bgcolor: colors.lightOliveGreen + 'DD' }
+                        }}
+                    >
+                        Ajouter un utilisateur
+                    </Button>
+                </Box>
             </Box>
 
             {error && (
@@ -439,11 +487,24 @@ const Users: React.FC = () => {
                                     </TableCell>
                                     <TableCell>
                                         <Chip
-                                            label={user.email_verified_at ? 'Autorisé' : 'En attente'}
+                                            label={
+                                                user.is_admin ? 'Administrateur' :
+                                                user.email_verified_at && user.admin_validated ? 'Autorisé' :
+                                                user.email_verified_at && !user.admin_validated ? 'Email vérifié' :
+                                                'En attente'
+                                            }
                                             size="small"
                                             sx={{
-                                                bgcolor: user.email_verified_at ? colors.lightOliveGreen + '20' : colors.paleTerracotta + '20',
-                                                color: user.email_verified_at ? colors.lightOliveGreen : colors.paleTerracotta,
+                                                bgcolor: 
+                                                    user.is_admin ? colors.softSunYellow + '20' :
+                                                    user.email_verified_at && user.admin_validated ? colors.lightOliveGreen + '20' :
+                                                    user.email_verified_at && !user.admin_validated ? colors.softLavender + '20' :
+                                                    colors.paleTerracotta + '20',
+                                                color: 
+                                                    user.is_admin ? colors.chestnutBrown :
+                                                    user.email_verified_at && user.admin_validated ? colors.lightOliveGreen :
+                                                    user.email_verified_at && !user.admin_validated ? colors.softLavender :
+                                                    colors.paleTerracotta,
                                                 fontWeight: 600
                                             }}
                                         />
@@ -487,12 +548,20 @@ const Users: React.FC = () => {
                     </ListItemIcon>
                     <ListItemText>Modifier</ListItemText>
                 </MenuItem>
-                {selectedUser && !selectedUser.email_verified_at && (
+                {selectedUser && !selectedUser.is_admin && !selectedUser.admin_validated && (
                     <MenuItem onClick={() => { handleAuthorize(selectedUser.id); handleMenuClose(); }}>
                         <ListItemIcon sx={{ color: colors.lightOliveGreen }}>
                             <AuthorizeIcon fontSize="small" />
                         </ListItemIcon>
                         <ListItemText>Autoriser</ListItemText>
+                    </MenuItem>
+                )}
+                {selectedUser && !selectedUser.is_admin && !selectedUser.admin_validated && (
+                    <MenuItem onClick={() => { handleRejectUser(selectedUser.id); handleMenuClose(); }}>
+                        <ListItemIcon sx={{ color: colors.discreetPoppyRed }}>
+                            <DeleteIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText>Rejeter</ListItemText>
                     </MenuItem>
                 )}
                 <MenuItem onClick={() => { handleResendValidation(selectedUser!.id); handleMenuClose(); }}>

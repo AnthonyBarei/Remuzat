@@ -18,13 +18,17 @@
         <strong>Important :</strong> Ce lien expirera dans 60 minutes pour des raisons de sécurité.
     </div>
     
-    <p>Une fois votre email confirmé, vous pourrez :</p>
+    <p>Une fois votre email confirmé, vous devrez attendre qu'un administrateur valide votre inscription pour :</p>
     <ul>
         <li>Accéder à votre espace personnel</li>
         <li>Effectuer des réservations</li>
         <li>Gérer vos séjours</li>
         <li>Recevoir des notifications importantes</li>
     </ul>
+    
+    <div class="alert alert-info">
+        <strong>Note :</strong> Après la vérification de votre email, un administrateur sera notifié et validera votre inscription dans les plus brefs délais.
+    </div>
     
     <p>Si vous n'avez pas créé de compte sur Remuzat, vous pouvez ignorer cet email.</p>
     

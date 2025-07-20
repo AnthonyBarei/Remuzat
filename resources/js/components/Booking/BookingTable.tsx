@@ -5,6 +5,7 @@ import { useTheme } from '@mui/material/styles';
 import moment from 'moment';
 
 import { BookingInfo, BookingDetails, WeekInfo, GapDetails } from './interfaces';
+import { toFrenchDay, toFrenchDayFirstLetter } from './utils';
 import { useAuth } from '../../context/hooks/useAuth';
 
 interface BookingTableProps {
@@ -253,7 +254,27 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
                             position: 'relative'
                         }}>
                             <Box sx={{borderBottom: `1px solid ${theme.palette.divider}`, p: 1, bgcolor: 'paper.main'}}>
-                                <Typography variant={"body2"} sx={{textTransform: 'capitalize', fontWeight: 600, color: 'text.primary'}}>{day.day_of_the_week}</Typography>
+                                <Typography 
+                                    variant={"body2"} 
+                                    sx={{
+                                        textTransform: 'capitalize', 
+                                        fontWeight: 600, 
+                                        color: 'text.primary',
+                                        display: { xs: 'none', sm: 'block' } // Hide full name on mobile
+                                    }}
+                                >
+                                    {day.day_of_the_week}
+                                </Typography>
+                                <Typography 
+                                    variant={"body2"} 
+                                    sx={{
+                                        fontWeight: 600, 
+                                        color: 'text.primary',
+                                        display: { xs: 'block', sm: 'none' } // Show only on mobile
+                                    }}
+                                >
+                                    {toFrenchDayFirstLetter(day.day_of_the_week)}
+                                </Typography>
                                 <Typography variant={"body1"} sx={{color: 'text.primary'}}>{day.day_of_the_month}</Typography>
                             </Box>
 
@@ -283,7 +304,7 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
                                 const rows: BookingDetails[][] = [];
                                 // Auto-adapt row height based on viewport width
                                 const viewportWidth = window.innerWidth;
-                                const baseRowHeight = 40;
+                                const baseRowHeight = 60;
                                 const minRowHeight = 35;
                                 const maxRowHeight = 80;
                                 

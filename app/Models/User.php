@@ -26,6 +26,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'is_admin',
         'role',
         'email_verified_at',
+        'admin_validated',
     ];
 
     /**
@@ -46,6 +47,7 @@ class User extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'is_admin' => 'boolean',
+        'admin_validated' => 'boolean',
     ];
 
     /**
@@ -174,5 +176,26 @@ class User extends Authenticatable implements MustVerifyEmail
     public function hasVerifiedEmail()
     {
         return ! is_null($this->email_verified_at);
+    }
+
+    /**
+     * Check if the user has been validated by an admin.
+     *
+     * @return bool
+     */
+    public function isAdminValidated()
+    {
+        return $this->admin_validated || $this->isAdmin();
+    }
+
+    /**
+     * Check if the user can access the booking system.
+     * User must have verified email AND be admin validated (unless they are an admin).
+     *
+     * @return bool
+     */
+    public function canAccessBookingSystem()
+    {
+        return $this->hasVerifiedEmail() && $this->isAdminValidated();
     }
 }

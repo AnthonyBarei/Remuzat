@@ -64,9 +64,11 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::get('/admin/analytics/users', [AdminController::class, 'userAnalytics']);
         Route::get('/admin/system/overview', [AdminController::class, 'systemOverview']);
         Route::get('/count/users', [UserController::class, 'count']);
-        Route::resource('/users', UserController::class);
+        Route::get('/users/pending', [UserController::class, 'getPendingUsers']);
         Route::post('/users/{user}/authorize', [UserController::class, 'authorizeUser']);
+        Route::post('/users/{user}/reject', [UserController::class, 'rejectUser']);
         Route::post('/users/{user}/resend-validation', [UserController::class, 'resendValidationEmail']);
+        Route::resource('/users', UserController::class);
         
         // Admin reservation routes
         Route::get('/admin/reservations', [BookingController::class, 'adminIndex']);

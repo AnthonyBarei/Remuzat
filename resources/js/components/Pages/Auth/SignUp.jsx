@@ -21,12 +21,14 @@ import { useAuth } from '../../../context/hooks/useAuth';
 export default function SignUp({authenticate}) {
     const [severity, setSeverity] = React.useState("error")
     const [alert, setAlert] = React.useState(null);
+    const [isLoading, setIsLoading] = React.useState(false);
     const { register } = useAuth();
 
     const handleSubmit = (event) => {
         event.preventDefault();
 
         setAlert(null);
+        setIsLoading(true);
 
         const formData = new FormData(event.currentTarget);
 
@@ -40,12 +42,14 @@ export default function SignUp({authenticate}) {
 
         const registeredCallback = () => {
             setSeverity('success');
-            setAlert('Utilisateur créé avec succès. Veuillez attendre qu\'un administrateur valide votre inscription.');
+            setAlert('Compte créé avec succès. Veuillez attendre qu\'un administrateur valide votre inscription.');
+            setIsLoading(false);
         }
 
         register(loginCredentials).then(registeredCallback).catch((error) => {
             setSeverity('error');
             setAlert(error.message);
+            setIsLoading(false);
         });
   };
 
@@ -120,9 +124,10 @@ export default function SignUp({authenticate}) {
                         type="submit"
                         fullWidth
                         variant="contained"
+                        disabled={isLoading}
                         sx={{ mt: 3, mb: 2 }}
                     >
-                        S'inscrire
+                        {isLoading ? 'Inscription en cours...' : 'S\'inscrire'}
                     </Button>
 
                     { alert && (

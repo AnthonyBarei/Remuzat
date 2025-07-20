@@ -121,6 +121,22 @@ class EmailService
     }
 
     /**
+     * Send admin notification for new user registration.
+     */
+    public function sendAdminNewUserNotification(User $user): void
+    {
+        // Get all admin users
+        $adminUsers = User::where('is_admin', true)
+            ->orWhereIn('role', ['admin', 'super_admin'])
+            ->get();
+
+        // Send notification to all admins
+        foreach ($adminUsers as $admin) {
+            $admin->notify(new \App\Notifications\NewUserNotification($user));
+        }
+    }
+
+    /**
      * Send booking confirmation email to user.
      */
     public function sendBookingConfirmationEmail(Booking $booking): void

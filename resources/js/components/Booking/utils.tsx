@@ -32,6 +32,12 @@ const toFrenchDay = (englishDay: string): string => {
     return FRENCH_DAYS[englishDay] || englishDay;
 };
 
+// Function to get first letter of French day name
+const toFrenchDayFirstLetter = (englishDay: string): string => {
+    const frenchDay = FRENCH_DAYS[englishDay] || englishDay;
+    return frenchDay.charAt(0).toUpperCase();
+};
+
 // Function to convert English month name to French
 const toFrenchMonth = (englishMonth: string): string => {
     return FRENCH_MONTHS[englishMonth] || englishMonth;
@@ -176,4 +182,4 @@ const generateBookings = (): BookingInfo[] => {
     return bookings;
 };
 
-export { getCurrentWeekDays, getPreviousWeekDays, getNextWeekDays, generateBookings, getWeekForDate, toFrenchDay, toFrenchMonth };
+export { getCurrentWeekDays, getPreviousWeekDays, getNextWeekDays, generateBookings, getWeekForDate, toFrenchDay, toFrenchDayFirstLetter, toFrenchMonth };

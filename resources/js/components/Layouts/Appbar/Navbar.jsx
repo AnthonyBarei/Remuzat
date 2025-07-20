@@ -5,8 +5,6 @@ import { useLocation, useNavigate, Link } from "react-router-dom";
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
 import Button from '@mui/material/Button';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
 // Components
@@ -24,8 +22,6 @@ const ResponsiveAppBar = (props) => {
     // Nav
     const location = useLocation();
     const navigate = useNavigate();
-    const [anchorElNav, setAnchorElNav] = React.useState(null);
-    const [anchorElUser, setAnchorElUser] = React.useState(null);
     // Auth
     const { user, isAdmin } = useAuth();
     const pages = isAdmin ? pagesAdmin : pagesUser;
@@ -34,21 +30,6 @@ const ResponsiveAppBar = (props) => {
     console.log('Navbar - isAdmin:', isAdmin, 'user:', user);
     console.log('Navbar - user.is_admin:', user?.is_admin, 'user.role:', user?.role);
     console.log('Navbar - Admin button should show:', isAdmin || user?.is_admin || user?.role === 'admin' || user?.role === 'super_admin');
-
-    const handleOpenNavMenu = (event) => {
-        setAnchorElNav(event.currentTarget);
-    };
-    const handleOpenUserMenu = (event) => {
-        setAnchorElUser(event.currentTarget);
-    };
-
-    const handleCloseNavMenu = () => {
-        setAnchorElNav(null);
-    };
-
-    const handleCloseUserMenu = () => {
-        setAnchorElUser(null);
-    };
 
     const handleLogoClick = () => {
         let {from} = location.state || {from: {pathname: '/'}}
@@ -64,16 +45,6 @@ const ResponsiveAppBar = (props) => {
             boxShadow: '0 2px 20px rgba(0,0,0,0.1)'
         }}>
             <Toolbar sx={{display: 'flex', justifyContent: 'space-between'}}>
-                <IconButton
-                    color="inherit"
-                    aria-label="open drawer"
-                    edge="start"
-                    onClick={props.handleDrawerToggle}
-                    sx={{ mr: 2, display: { sm: 'none' }, color: 'primary.main' }}
-                >
-                    <MenuIcon />
-                </IconButton>
-
                 <Box sx={{ 
                     fontWeight: 700, 
                     fontSize: 24, 
@@ -91,7 +62,6 @@ const ResponsiveAppBar = (props) => {
                             component={Link}
                             to={link}
                             key={name}
-                            onClick={handleCloseNavMenu}
                             sx={{
                                 my: 2,
                                 color: 'primary.main',

@@ -32,6 +32,7 @@ class RegisterController extends BaseController
 
         $input = $request->all();
         $input['password'] = bcrypt($input['password']);
+        $input['admin_validated'] = false; // New users need admin validation
 
         $user = User::create($input);
 
@@ -44,6 +45,14 @@ class RegisterController extends BaseController
             Log::error('Failed to send verification email: ' . $e->getMessage());
         }
 
+        // Send admin notification for new user registration
+        try {
+            $emailService->sendAdminNewUserNotification($user);
+        } catch (\Exception $e) {
+            // Log the error but don't fail the registration
+            Log::error('Failed to send admin notification for new user: ' . $e->getMessage());
+        }
+
         $name = $user->firstname . (($user->lastname) ? " " . $user->lastname : "");
 
         // $success['token'] = $user->createToken('UserLoginToken')->plainTextToken;
@@ -51,6 +60,6 @@ class RegisterController extends BaseController
         $success['email'] = $user->email;
         $success['is_admin'] = $user->is_admin;
 
-        return $this->sendResponse($success, 'Utilisateur enregistré avec succès. Un email de vérification a été envoyé à votre adresse email.');
+        return $this->sendResponse($success, 'Utilisateur enregistré avec succès. Un email de vérification a été envoyé à votre adresse email. Veuillez attendre qu\'un administrateur valide votre inscription.');
     }
 }
