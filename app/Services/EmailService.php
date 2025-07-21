@@ -121,6 +121,23 @@ class EmailService
     }
 
     /**
+     * Send user validation notification email.
+     */
+    public function sendUserValidatedEmail(User $user): void
+    {
+        try {
+            Mail::to($user->email)->send(new \App\Mail\UserValidated($user));
+        } catch (\Exception $e) {
+            Log::error('Failed to send user validated email: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'exception' => $e
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
      * Send admin notification for new user registration.
      */
     public function sendAdminNewUserNotification(User $user): void

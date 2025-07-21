@@ -297,6 +297,19 @@ class UserController extends BaseController
         $user->admin_validated = true;
         $user->save();
 
+        // Send validation notification email to the user
+        try {
+            $emailService = new EmailService();
+            $emailService->sendUserValidatedEmail($user);
+        } catch (\Exception $e) {
+            // Log the error but don't fail the authorization
+            Log::error('Failed to send user validated email: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'exception' => $e
+            ]);
+        }
+
         $name = $user->firstname . " " . $user->lastname;
         return $this->sendResponse([], "Utilisateur $name autorisé avec succès.");
     }

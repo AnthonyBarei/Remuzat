@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use App\Services\EmailService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Mail;
 
 class AdminValidationTest extends TestCase
 {
@@ -47,9 +49,12 @@ class AdminValidationTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        // Admin authorizes the user
-        $response = $this->actingAs($admin)
-            ->post("/api/users/{$user->id}/authorize");
+        // Admin authorizes the user using Sanctum token
+        $adminToken = $admin->createToken('test-token')->plainTextToken;
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $adminToken,
+            'Accept' => 'application/json',
+        ])->post("/api/users/{$user->id}/authorize");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -61,6 +66,69 @@ class AdminValidationTest extends TestCase
         $user->refresh();
         $this->assertTrue($user->admin_validated);
         $this->assertNotNull($user->email_verified_at);
+    }
+
+    public function test_email_is_sent_when_admin_validates_user()
+    {
+        // Fake the mail facade
+        Mail::fake();
+
+        // Create an admin user
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'role' => 'admin',
+            'admin_validated' => true,
+        ]);
+
+        // Create a regular user
+        $user = User::factory()->create([
+            'admin_validated' => false,
+            'email_verified_at' => now(),
+        ]);
+
+        // Admin authorizes the user using Sanctum token
+        $adminToken = $admin->createToken('test-token')->plainTextToken;
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $adminToken,
+            'Accept' => 'application/json',
+        ])->post("/api/users/{$user->id}/authorize");
+
+        $response->assertStatus(200);
+
+        // Assert that the validation email was sent to the user
+        Mail::assertSent(\App\Mail\UserValidated::class, function ($mail) use ($user) {
+            return $mail->hasTo($user->email);
+        });
+    }
+
+    public function test_user_can_login_after_admin_validation()
+    {
+        // Create an admin user
+        $admin = User::factory()->create([
+            'is_admin' => true,
+            'role' => 'admin',
+            'admin_validated' => true,
+        ]);
+
+        // Create a regular user
+        $user = User::factory()->create([
+            'admin_validated' => false,
+            'email_verified_at' => now(),
+        ]);
+
+        // Admin authorizes the user using Sanctum token
+        $adminToken = $admin->createToken('test-token')->plainTextToken;
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $adminToken,
+            'Accept' => 'application/json',
+        ])->post("/api/users/{$user->id}/authorize");
+
+        $response->assertStatus(200);
+
+        // Verify that the user is now properly validated
+        $user->refresh();
+        $this->assertTrue($user->admin_validated);
+        $this->assertTrue($user->canAccessBookingSystem());
     }
 
     public function test_admin_can_reject_user()
@@ -77,9 +145,12 @@ class AdminValidationTest extends TestCase
             'admin_validated' => false,
         ]);
 
-        // Admin rejects the user
-        $response = $this->actingAs($admin)
-            ->post("/api/users/{$user->id}/reject");
+        // Admin rejects the user using Sanctum token
+        $adminToken = $admin->createToken('test-token')->plainTextToken;
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $adminToken,
+            'Accept' => 'application/json',
+        ])->post("/api/users/{$user->id}/reject");
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -120,9 +191,12 @@ class AdminValidationTest extends TestCase
             'email_verified_at' => now(),
         ]);
 
-        // Admin gets pending users
-        $response = $this->actingAs($admin)
-            ->get('/api/users/pending');
+        // Admin gets pending users using Sanctum token
+        $adminToken = $admin->createToken('test-token')->plainTextToken;
+        $response = $this->withHeaders([
+            'Authorization' => 'Bearer ' . $adminToken,
+            'Accept' => 'application/json',
+        ])->get('/api/users/pending');
 
         $response->assertStatus(200);
         $response->assertJson([
