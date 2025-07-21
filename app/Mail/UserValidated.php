@@ -31,6 +31,11 @@ class UserValidated extends Mailable
     {
         return new Envelope(
             subject: 'Votre compte a été validé - Remuzat',
+            tags: ['validation', 'remuzat'],
+            metadata: [
+                'user_id' => $this->user->id,
+                'email_type' => 'validation',
+            ],
         );
     }
 

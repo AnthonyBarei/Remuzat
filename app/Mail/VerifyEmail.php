@@ -34,6 +34,11 @@ class VerifyEmail extends Mailable
     {
         return new Envelope(
             subject: 'Confirmez votre adresse email - Remuzat',
+            tags: ['verification', 'remuzat'],
+            metadata: [
+                'user_id' => $this->user->id,
+                'email_type' => 'verification',
+            ],
         );
     }
 
