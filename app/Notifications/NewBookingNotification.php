@@ -9,7 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewBookingNotification extends Notification implements ShouldQueue
+class NewBookingNotification extends Notification
 {
     use Queueable;
 

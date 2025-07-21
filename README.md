@@ -35,6 +35,9 @@ A beautiful booking system for the village of Remuzat, built with Laravel 9 and 
 - **CSRF Protection**: Built-in security measures
 - **Input Validation**: Comprehensive data validation
 - **Admin Panel**: Complete admin interface for user and booking management
+- **Email Verification**: Secure email verification system
+- **Admin Validation**: Two-step user validation (email + admin approval)
+- **Email Notifications**: Comprehensive email system for user lifecycle events
 
 ### Landing Page
 - **Beautiful Hero Section**: Showcasing the village of Remuzat
@@ -141,6 +144,8 @@ npm run build
 3. Approve, reject, or modify bookings
 4. Manage users (authorize, delete, resend validation emails)
 5. Monitor overlapping bookings with visual indicators
+6. Receive email notifications for new bookings and user registrations
+7. Users automatically receive validation confirmation emails
 
 ### For Developers
 - API documentation available at `/api` endpoints
@@ -154,6 +159,10 @@ npm run build
 - `POST /api/register` - User registration
 - `POST /api/login` - User login
 - `POST /api/logout` - User logout
+- `POST /api/email/verify` - Verify email address
+- `POST /api/email/resend` - Resend verification email
+- `POST /api/forgot-password` - Request password reset
+- `POST /api/reset-password` - Reset password with token
 
 ### Bookings
 - `GET /api/reservations` - List user's bookings
@@ -189,6 +198,13 @@ npm run build
 - Extend `BookingController` and database for additional types
 - Update frontend components to handle new types
 
+### Email System
+- Email templates located in `resources/views/emails/`
+- Mail classes in `app/Mail/`
+- Email service in `app/Services/EmailService.php`
+- Configure SMTP settings in `.env` file
+- Test emails using artisan commands: `php artisan test:email` and `php artisan test:user-validated-email`
+
 ## 🧪 Testing
 
 ```bash
@@ -197,6 +213,10 @@ php artisan test
 
 # Run frontend tests (if configured)
 npm test
+
+# Test email functionality
+php artisan test:email user@example.com
+php artisan test:user-validated-email user@example.com
 ```
 
 ## 📝 Contributing

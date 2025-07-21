@@ -21,6 +21,15 @@ This is a Laravel 9 + React + TypeScript booking system for a beautiful village 
 - Use Laravel's built-in validation rules
 - Implement proper authorization checks (users can only access their own data)
 
+### Email System
+- Use EmailService for centralized email sending logic
+- Always handle email exceptions gracefully (don't fail user actions if email fails)
+- Use queue-based notifications for better performance
+- Follow consistent email template structure with Remuzat branding
+- Include proper error logging for email failures
+- Use French language for all user-facing email content
+- Test email functionality with artisan commands
+
 ### React Frontend
 - Use TypeScript for all components
 - Use functional components with hooks
@@ -39,7 +48,10 @@ app/
 ├── Http/Controllers/Api/     # API controllers
 ├── Models/                   # Eloquent models
 ├── Http/Resources/           # API resources
-└── Http/Middleware/          # Custom middleware
+├── Http/Middleware/          # Custom middleware
+├── Mail/                     # Mail classes
+├── Services/                 # Service classes (EmailService)
+└── Notifications/            # Notification classes
 
 resources/js/
 ├── components/               # React components
@@ -49,6 +61,8 @@ resources/js/
 │   └── Routes/              # Route components
 ├── context/                 # React context (auth, theme)
 └── types/                   # TypeScript type definitions
+
+resources/views/emails/       # Email templates
 ```
 
 ## Business Rules
@@ -74,6 +88,9 @@ resources/js/
 - Authentication uses Laravel Sanctum
 - Admins can authorize users, delete users, and resend validation emails
 - User email verification status is tracked and displayed
+- **Two-step validation process**: Email verification + admin validation
+- **Email notifications**: Users receive validation confirmation emails
+- **Admin notifications**: Admins receive notifications for new users and bookings
 
 ### UI/UX Guidelines
 - Use consistent color scheme based on user preferences
@@ -113,8 +130,14 @@ resources/js/
 - `GET /api/users` - List all users
 - `PUT /api/users/{id}` - Update user
 - `DELETE /api/users/{id}` - Delete user
-- `POST /api/users/{id}/authorize` - Authorize user
+- `POST /api/users/{id}/authorize` - Authorize user (sends validation email)
 - `POST /api/users/{id}/resend-validation` - Resend validation email
+
+### Email Endpoints
+- `POST /api/email/verify` - Verify email address
+- `POST /api/email/resend` - Resend verification email
+- `POST /api/forgot-password` - Request password reset
+- `POST /api/reset-password` - Reset password with token
 
 ## Security
 - All booking endpoints require authentication
@@ -162,6 +185,12 @@ resources/js/
 - ✅ User color preferences
 - ✅ Responsive design
 - ✅ Loading states and error handling
+- ✅ **Complete Email System**:
+  - Email verification for new users
+  - Password reset functionality
+  - Admin notifications for new bookings and users
+  - User validation confirmation emails
+  - Professional email templates with Remuzat branding
 - ✅ **Complete Admin Panel**:
   - User management (view, edit, delete, authorize, resend validation)
   - Reservation management (view, edit, approve, reject)
@@ -180,10 +209,11 @@ resources/js/
 
 ## Future Enhancements
 - Additional booking types (meetings, vacations)
-- Email notifications
 - Advanced filtering and search
 - Calendar export functionality
 - Payment integration
 - Booking analytics and reporting
 - Bulk operations for admin
-- Email templates for notifications 
+- Email templates for additional notifications
+- Push notifications
+- SMS notifications 

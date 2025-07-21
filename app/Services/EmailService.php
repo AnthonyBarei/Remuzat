@@ -7,7 +7,9 @@ use App\Models\Booking;
 use App\Mail\VerifyEmail;
 use App\Mail\ResetPassword;
 use App\Mail\AdminNewBooking;
+use App\Mail\UserValidated;
 use App\Notifications\NewBookingNotification;
+use App\Notifications\NewUserNotification;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -126,7 +128,7 @@ class EmailService
     public function sendUserValidatedEmail(User $user): void
     {
         try {
-            Mail::to($user->email)->send(new \App\Mail\UserValidated($user));
+            Mail::to($user->email)->send(new UserValidated($user));
         } catch (\Exception $e) {
             Log::error('Failed to send user validated email: ' . $e->getMessage(), [
                 'user_id' => $user->id,
@@ -149,7 +151,7 @@ class EmailService
 
         // Send notification to all admins
         foreach ($adminUsers as $admin) {
-            $admin->notify(new \App\Notifications\NewUserNotification($user));
+            $admin->notify(new NewUserNotification($user));
         }
     }
 
