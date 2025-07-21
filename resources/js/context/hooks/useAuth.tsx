@@ -3,6 +3,7 @@ import React, { useState, createContext, useContext, useEffect } from "react";
 
 // TypeScript interfaces
 interface User {
+    id?: number;
     name: string | null;
     email: string | null;
     token: string | null;

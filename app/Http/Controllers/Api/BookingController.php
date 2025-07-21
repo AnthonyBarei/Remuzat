@@ -480,7 +480,22 @@ class BookingController extends BaseController
             $booking->validated_by = Auth::user()->id;
             $booking->save();
 
+            // Load relationships for email
             $booking->load(['user', 'validatedBy']);
+
+            // Send approval email to user
+            try {
+                $emailService = new EmailService();
+                $emailService->sendBookingApprovedEmail($booking);
+            } catch (\Exception $e) {
+                // Log the error but don't fail the approval
+                Log::error('Failed to send booking approval email: ' . $e->getMessage(), [
+                    'booking_id' => $booking->id,
+                    'user_id' => $booking->user->id ?? null,
+                    'exception' => $e
+                ]);
+            }
+
             return $this->sendResponse($booking, 'Réservation approuvée avec succès.');
         } catch (\Exception $e) {
             return $this->sendError('Échec de l\'approbation de la réservation.', [], 500);
@@ -500,18 +515,92 @@ class BookingController extends BaseController
         }
 
         try {
-            if ($booking->status !== 'pending') {
-                return $this->sendError('Seules les réservations en attente peuvent être rejetées.', [], 422);
+            // Allow cancellation of pending and approved bookings
+            if (!in_array($booking->status, ['pending', 'approved'])) {
+                return $this->sendError('Seules les réservations en attente ou approuvées peuvent être annulées.', [], 422);
             }
 
             $booking->status = 'cancelled';
             $booking->validated_by = Auth::user()->id;
             $booking->save();
 
+            // Load relationships for email
             $booking->load(['user', 'validatedBy']);
-            return $this->sendResponse($booking, 'Réservation rejetée avec succès.');
+
+            // Send rejection email to user
+            try {
+                $emailService = new EmailService();
+                $emailService->sendBookingRejectedEmail($booking);
+            } catch (\Exception $e) {
+                // Log the error but don't fail the rejection
+                Log::error('Failed to send booking rejection email: ' . $e->getMessage(), [
+                    'booking_id' => $booking->id,
+                    'user_id' => $booking->user->id ?? null,
+                    'exception' => $e
+                ]);
+            }
+
+            // Log the admin cancellation
+            Log::info('Booking cancelled by admin', [
+                'admin_id' => Auth::user()->id,
+                'admin_email' => Auth::user()->email,
+                'cancelled_booking' => [
+                    'id' => $booking->id,
+                    'user_id' => $booking->added_by,
+                    'user_email' => $booking->user->email ?? null,
+                    'start' => $booking->start,
+                    'end' => $booking->end,
+                    'previous_status' => $booking->status
+                ]
+            ]);
+
+            return $this->sendResponse($booking, 'Réservation annulée avec succès.');
         } catch (\Exception $e) {
-            return $this->sendError('Échec du rejet de la réservation.', [], 500);
+            return $this->sendError('Échec de l\'annulation de la réservation.', [], 500);
+        }
+    }
+
+    /**
+     * Delete a reservation (admin only).
+     *
+     * @param  \App\Models\Booking  $booking
+     * @return \Illuminate\Http\Response
+     */
+    public function adminDestroy(Booking $booking)
+    {
+        if (Gate::denies('delete', $booking)) {
+            return $this->sendError('Accès refusé. Privilèges administrateur requis.', [], 403);
+        }
+
+        try {
+            // Store booking info before deletion for logging
+            $bookingInfo = [
+                'id' => $booking->id,
+                'user_id' => $booking->added_by,
+                'user_email' => $booking->user->email ?? null,
+                'start' => $booking->start,
+                'end' => $booking->end,
+                'status' => $booking->status
+            ];
+
+            // Delete the booking
+            $booking->delete();
+
+            // Log the deletion
+            Log::info('Booking deleted by admin', [
+                'admin_id' => Auth::user()->id,
+                'admin_email' => Auth::user()->email,
+                'deleted_booking' => $bookingInfo
+            ]);
+
+            return $this->sendResponse(null, 'Réservation supprimée avec succès.');
+        } catch (\Exception $e) {
+            Log::error('Failed to delete booking: ' . $e->getMessage(), [
+                'booking_id' => $booking->id,
+                'admin_id' => Auth::user()->id,
+                'exception' => $e
+            ]);
+            return $this->sendError('Échec de la suppression de la réservation.', [], 500);
         }
     }
 

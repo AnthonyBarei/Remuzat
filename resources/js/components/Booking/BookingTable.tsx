@@ -35,14 +35,27 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
         }
         
         // User can only modify their own bookings
-        const currentUserId = (user as any)?.id;
+        const currentUserId = user?.id;
         return booking.added_by === currentUserId;
     };
 
     // Check if current user owns this booking (for any interaction)
     const isOwnBooking = (booking: BookingDetails): boolean => {
-        const currentUserId = (user as any)?.id;
-        return booking.added_by === currentUserId;
+        const currentUserId = user?.id;
+        const isOwn = booking.added_by === currentUserId;
+        
+        // Debug logging for newly created bookings
+        if (booking.status === 'pending' && isOwn) {
+            console.log('Own booking detected:', {
+                bookingId: booking.id,
+                bookingAddedBy: booking.added_by,
+                currentUserId: currentUserId,
+                isOwn: isOwn,
+                user: user
+            });
+        }
+        
+        return isOwn;
     };
 
     // generate booking elements
@@ -97,7 +110,7 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
                 end: booking.end,
                 start_day: booking.start_day,
                 end_day: booking.end_day,
-                duration: visibleDuration, // Use visible duration for display
+                duration: booking.duration, // Use full booking duration for display
                 size: `${size}%`,
                 margin_left: `${marginLeft}%`,
                 bookingMode: false,
@@ -128,6 +141,12 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
     };
 
     const handleBookingClick = (booking: BookingDetails) => {
+        console.log('Booking clicked:', {
+            bookingId: booking.id,
+            bookingAddedBy: booking.added_by,
+            currentUserId: user?.id,
+            isOwn: isOwnBooking(booking)
+        });
         setSelectedBooking(booking);
         setActionDialogOpen(true);
     };
@@ -164,10 +183,10 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
     const getBookingColor = (type: string, status: string, userColor: string) => {
         if (status === 'cancelled') {
             return { 
-                bg: 'transparent', 
+                bg: `linear-gradient(135deg, ${theme.palette.error.light}15 0%, ${theme.palette.error.main}10 50%, ${theme.palette.error.light}15 100%)`, 
                 border: theme.palette.error.main, 
                 pattern: 'cancelled',
-                text: theme.palette.error.main
+                text: theme.palette.error.dark
             };
         }
         
@@ -394,14 +413,17 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'center',
-                                                        backgroundImage: booking.status === 'cancelled' ? 'repeating-linear-gradient(45deg, transparent, transparent 2px, currentColor 2px, currentColor 4px)' : 'none',
-                                                        backgroundSize: '4px 4px',
-                                                        opacity: booking.status === 'cancelled' ? 0.6 : 1,
+                                                        backgroundImage: booking.status === 'cancelled' ? 
+                                                            `repeating-linear-gradient(45deg, transparent, transparent 3px, ${theme.palette.error.main}20 3px, ${theme.palette.error.main}20 6px)` : 'none',
+                                                        backgroundSize: '6px 6px',
+                                                        opacity: booking.status === 'cancelled' ? 0.85 : 1,
                                                         cursor: isOwn ? 'pointer' : 'default',
                                                         transition: 'all 0.2s ease-in-out',
+                                                        boxShadow: booking.status === 'cancelled' ? `0 2px 4px ${theme.palette.error.main}20` : 'none',
                                                         '&:hover': isOwn ? {
                                                             transform: 'scale(1.02)',
-                                                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                                                            boxShadow: booking.status === 'cancelled' ? 
+                                                                `0 4px 8px ${theme.palette.error.main}30` : '0 4px 8px rgba(0,0,0,0.15)',
                                                             zIndex: 2
                                                         } : {}
                                                     }}
@@ -475,6 +497,28 @@ const BookingTable: React.FC<BookingTableProps> = ({...props}) => {
                                                                     textAlign: 'left'
                                                                 }}>
                                                                     {booking.isStartOutOfWeek && '←'} {booking.isEndOutOfWeek && '→'}
+                                                                </Box>
+                                                            )}
+                                                            
+                                                            {/* Canceled booking indicator */}
+                                                            {booking.status === 'cancelled' && (
+                                                                <Box sx={{ 
+                                                                    position: 'absolute',
+                                                                    top: -2,
+                                                                    right: -2,
+                                                                    width: 12,
+                                                                    height: 12,
+                                                                    borderRadius: '50%',
+                                                                    backgroundColor: theme.palette.error.main,
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    fontSize: '0.5rem',
+                                                                    color: 'white',
+                                                                    fontWeight: 'bold',
+                                                                    boxShadow: `0 1px 3px ${theme.palette.error.main}40`
+                                                                }}>
+                                                                    ✕
                                                                 </Box>
                                                             )}
                                                         </Box>

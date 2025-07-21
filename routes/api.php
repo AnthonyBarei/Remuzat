@@ -76,6 +76,7 @@ Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::put('/admin/reservations/{booking}', [BookingController::class, 'adminUpdate']);
         Route::post('/admin/reservations/{booking}/approve', [BookingController::class, 'approve']);
         Route::post('/admin/reservations/{booking}/reject', [BookingController::class, 'reject']);
+        Route::delete('/admin/reservations/{booking}', [BookingController::class, 'adminDestroy']);
     });
 
     // Super Admin routes with super admin middleware

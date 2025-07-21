@@ -39,7 +39,7 @@
     @endif
 
     <div style="text-align: center; margin: 30px 0;">
-        <a href="{{ config('app.url') }}/admin" class="btn">Accéder au panneau d'administration</a>
+        <a href="{{ config('app.url') }}/admin" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: 500; margin: 20px 0;">Accéder au panneau d'administration</a>
     </div>
     
     <p>Actions recommandées :</p>

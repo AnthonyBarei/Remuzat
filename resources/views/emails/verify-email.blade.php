@@ -8,7 +8,7 @@
     <p>Merci de vous être inscrit sur notre plateforme de réservation. Pour commencer à utiliser nos services, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :</p>
     
     <div style="text-align: center;">
-        <a href="{{ $verificationUrl }}" class="btn">Confirmer mon adresse email</a>
+        <a href="{{ $verificationUrl }}" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 5px; font-weight: 500; margin: 20px 0;">Confirmer mon adresse email</a>
     </div>
     
     <p>Si le bouton ne fonctionne pas, vous pouvez copier et coller le lien suivant dans votre navigateur :</p>

@@ -8,6 +8,8 @@ use App\Mail\VerifyEmail;
 use App\Mail\ResetPassword;
 use App\Mail\AdminNewBooking;
 use App\Mail\UserValidated;
+use App\Mail\BookingApproved;
+use App\Mail\BookingRejected;
 use App\Notifications\NewBookingNotification;
 use App\Notifications\NewUserNotification;
 use Illuminate\Support\Facades\Mail;
@@ -171,5 +173,41 @@ class EmailService
     {
         // TODO: Implement booking status update email
         // Mail::to($booking->user->email)->send(new \App\Mail\BookingStatusUpdate($booking));
+    }
+
+    /**
+     * Send booking approval email to user.
+     */
+    public function sendBookingApprovedEmail(Booking $booking): void
+    {
+        try {
+            Mail::to($booking->user->email)->send(new BookingApproved($booking));
+        } catch (\Exception $e) {
+            Log::error('Failed to send booking approved email: ' . $e->getMessage(), [
+                'booking_id' => $booking->id,
+                'user_id' => $booking->user->id,
+                'email' => $booking->user->email,
+                'exception' => $e
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Send booking rejection email to user.
+     */
+    public function sendBookingRejectedEmail(Booking $booking): void
+    {
+        try {
+            Mail::to($booking->user->email)->send(new BookingRejected($booking));
+        } catch (\Exception $e) {
+            Log::error('Failed to send booking rejected email: ' . $e->getMessage(), [
+                'booking_id' => $booking->id,
+                'user_id' => $booking->user->id,
+                'email' => $booking->user->email,
+                'exception' => $e
+            ]);
+            throw $e;
+        }
     }
 } 

@@ -59,6 +59,7 @@ const BookingAddForm: React.FC<BookingAddFormProps> = ({ onBookingCreated }) => 
             };
             const response = await window.axios.post('/api/reservations', params);
             if (response.data.success) {
+                console.log('Booking created successfully:', response.data);
                 setError(null);
                 setSuccess('Réservation créée avec succès !');
                 setStartDate(null);

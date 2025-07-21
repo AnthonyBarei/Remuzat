@@ -37,6 +37,7 @@ const Booking: React.FC = () => {
                 }
             });
             if (response.data.success) {
+                console.log('Bookings fetched:', response.data.data);
                 const transformedBookings: BookingInfo[] = response.data.data.map((booking: any) => ({
                     id: booking.id,
                     start: booking.start.split(' ')[0],
@@ -51,6 +52,7 @@ const Booking: React.FC = () => {
                     validated_by: booking.validated_by,
                     user: booking.user
                 }));
+                console.log('Transformed bookings:', transformedBookings);
                 setBookings(transformedBookings);
             } else {
                 setError('Impossible de récupérer les réservations.');

@@ -40,7 +40,8 @@ import {
     Email,
     Visibility,
     Refresh,
-    MoreVert
+    MoreVert,
+    Delete
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import moment from 'moment';
@@ -272,6 +273,33 @@ const Reservations: React.FC = () => {
 
             const result = await response.json();
             setSuccess(result.message || 'Réservation annulée avec succès');
+            fetchReservations();
+            fetchStatistics();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        }
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer définitivement cette réservation ? Cette action est irréversible.')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/admin/reservations/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de la suppression');
+            }
+
+            const result = await response.json();
+            setSuccess(result.message || 'Réservation supprimée avec succès');
             fetchReservations();
             fetchStatistics();
         } catch (err) {
@@ -755,6 +783,20 @@ const Reservations: React.FC = () => {
                         <Email fontSize="small" />
                     </ListItemIcon>
                     <ListItemText>Renvoyer email</ListItemText>
+                </MenuItem>
+                <MenuItem 
+                    onClick={() => { handleDelete(menuReservation!.id); handleMenuClose(); }}
+                    sx={{ 
+                        color: colors.discreetPoppyRed,
+                        '&:hover': { 
+                            bgcolor: colors.discreetPoppyRed + '10' 
+                        }
+                    }}
+                >
+                    <ListItemIcon sx={{ color: colors.discreetPoppyRed }}>
+                        <Delete fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Supprimer définitivement</ListItemText>
                 </MenuItem>
             </Menu>
 
