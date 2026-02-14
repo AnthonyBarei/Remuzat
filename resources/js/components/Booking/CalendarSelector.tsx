@@ -1,17 +1,10 @@
 import React, { useState } from 'react';
 import { 
-    Box, 
-    Button, 
-    Dialog, 
-    DialogTitle, 
-    DialogContent, 
-    DialogActions,
-    IconButton,
-    Typography,
-    Paper
+    Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+    IconButton, Typography, Paper
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
 import moment from 'moment';
 import { useTheme } from '@mui/material/styles';
 
@@ -25,139 +18,97 @@ const CalendarSelector: React.FC<CalendarSelectorProps> = ({ onWeekSelected, cur
     const [selectedDate, setSelectedDate] = useState<moment.Moment>(currentWeek);
     const theme = useTheme();
 
-    const handleOpen = () => {
-        setSelectedDate(currentWeek);
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
-
-    const handleConfirm = () => {
-        onWeekSelected(selectedDate);
-        handleClose();
-    };
+    const handleOpen = () => { setSelectedDate(currentWeek); setOpen(true); };
+    const handleClose = () => setOpen(false);
+    const handleConfirm = () => { onWeekSelected(selectedDate); handleClose(); };
 
     return (
         <>
             <IconButton
                 onClick={handleOpen}
                 sx={{
-                    bgcolor: 'secondary.main',
-                    color: 'secondary.contrastText',
-                    borderRadius: 2,
+                    width: 36, height: 36, borderRadius: 2,
+                    bgcolor: 'transparent',
+                    color: 'text.secondary',
+                    border: `1.5px solid ${theme.palette.divider}`,
+                    transition: 'all 0.15s ease',
                     '&:hover': {
-                        bgcolor: 'secondary.dark'
-                    }
+                        bgcolor: `${theme.palette.primary.main}10`,
+                        borderColor: theme.palette.primary.main,
+                        color: theme.palette.primary.dark,
+                    },
                 }}
                 title="Sélectionner une semaine"
+                size="small"
             >
-                <CalendarTodayIcon fontSize="small" />
+                <CalendarTodayOutlinedIcon sx={{ fontSize: 16 }} />
             </IconButton>
 
             <Dialog 
                 open={open} 
                 onClose={handleClose}
-                maxWidth="sm"
+                maxWidth="xs"
                 fullWidth
                 PaperProps={{
                     sx: {
                         borderRadius: 3,
-                        bgcolor: 'rgba(255,255,255,0.98)',
-                        backdropFilter: 'blur(10px)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.15)'
+                        border: `1px solid ${theme.palette.divider}`,
+                        boxShadow: '0 8px 40px rgba(84,73,65,0.12)',
                     }
                 }}
             >
                 <DialogTitle sx={{ 
-                    textAlign: 'center', 
-                    color: 'secondary.main',
-                    fontWeight: 700,
-                    pb: 1
+                    fontWeight: 700, fontSize: '1.05rem',
+                    color: 'text.primary', pb: 0.5,
                 }}>
-                    Sélectionner une semaine
+                    Aller à une semaine
                 </DialogTitle>
                 
                 <DialogContent sx={{ pt: 2 }}>
-                    <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        flexDirection: 'column',
-                        gap: 3
-                    }}>
-                        <Typography variant="body2" color="text.secondary" textAlign="center">
-                            Choisissez une date pour naviguer vers la semaine correspondante
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.85rem' }}>
+                            Choisissez une date pour naviguer vers la semaine correspondante.
                         </Typography>
                         
                         <DatePicker
                             value={selectedDate}
-                            onChange={(newValue) => {
-                                if (newValue) {
-                                    setSelectedDate(newValue);
-                                }
-                            }}
+                            onChange={(newValue) => { if (newValue) setSelectedDate(newValue); }}
                             slotProps={{
                                 textField: {
-                                    fullWidth: true,
-                                    variant: 'outlined',
-                                    sx: {
-                                        '& .MuiOutlinedInput-root': {
-                                            borderRadius: 2,
-                                            '&:hover fieldset': {
-                                                borderColor: 'secondary.main',
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: 'secondary.main',
-                                            }
-                                        }
-                                    }
+                                    fullWidth: true, variant: 'outlined', size: 'small',
                                 }
                             }}
                         />
 
-                        <Paper elevation={1} sx={{ 
-                            p: 2, 
-                            bgcolor: 'grey.50',
-                            borderRadius: 2,
-                            width: '100%'
+                        <Box sx={{ 
+                            p: 2, bgcolor: `${theme.palette.primary.main}08`,
+                            borderRadius: 2, border: `1px solid ${theme.palette.primary.main}18`,
                         }}>
-                            <Typography variant="body2" color="text.secondary" gutterBottom>
-                                Semaine sélectionnée :
+                            <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                                Semaine sélectionnée
                             </Typography>
-                            <Typography variant="body1" fontWeight={600}>
-                                {selectedDate.startOf('isoWeek').format('DD/MM/YYYY')} - {selectedDate.endOf('isoWeek').format('DD/MM/YYYY')}
+                            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', mt: 0.25 }}>
+                                {selectedDate.clone().startOf('isoWeek').format('DD/MM/YYYY')} — {selectedDate.clone().endOf('isoWeek').format('DD/MM/YYYY')}
                             </Typography>
-                        </Paper>
+                        </Box>
                     </Box>
                 </DialogContent>
 
-                <DialogActions sx={{ p: 3, pt: 1 }}>
-                    <Button 
-                        onClick={handleClose}
-                        sx={{ 
-                            color: 'text.secondary',
-                            fontWeight: 600
-                        }}
-                    >
+                <DialogActions sx={{ px: 3, pb: 2.5, pt: 0.5 }}>
+                    <Button onClick={handleClose} sx={{ color: 'text.secondary', fontWeight: 500, borderRadius: 2 }}>
                         Annuler
                     </Button>
                     <Button 
                         onClick={handleConfirm}
                         variant="contained"
                         sx={{ 
-                            bgcolor: 'secondary.main',
-                            color: 'secondary.contrastText',
-                            fontWeight: 700,
-                            borderRadius: 2,
-                            px: 3,
-                            '&:hover': {
-                                bgcolor: 'secondary.dark'
-                            }
+                            bgcolor: 'primary.main', color: '#fff',
+                            fontWeight: 600, borderRadius: 2, px: 2.5,
+                            boxShadow: 'none',
+                            '&:hover': { bgcolor: 'primary.dark' },
                         }}
                     >
-                        Aller à cette semaine
+                        Confirmer
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -165,4 +116,4 @@ const CalendarSelector: React.FC<CalendarSelectorProps> = ({ onWeekSelected, cur
     );
 };
 
-export default CalendarSelector; 
+export default CalendarSelector;

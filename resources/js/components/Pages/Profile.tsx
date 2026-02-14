@@ -15,8 +15,10 @@ import {
     DialogActions,
     IconButton,
     Avatar,
-    Grid
+    Grid,
+    useMediaQuery
 } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import {
     Person,
     Email,
@@ -30,6 +32,8 @@ import { useAuth } from '../../context/hooks/useAuth';
 import MainLayout from '../Layouts/Main';
 
 const Profile: React.FC = () => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const { user, logout } = useAuth();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -84,7 +88,6 @@ const Profile: React.FC = () => {
                 setError(response.data.message || 'Erreur lors de la mise à jour du mot de passe.');
             }
         } catch (error: any) {
-            console.error('Erreur lors de la mise à jour du mot de passe:', error);
             setError(error.response?.data?.message || 'Erreur lors de la mise à jour du mot de passe.');
         } finally {
             setLoading(false);
@@ -114,7 +117,6 @@ const Profile: React.FC = () => {
                 setError(response.data.message || 'Erreur lors de la suppression du compte.');
             }
         } catch (error: any) {
-            console.error('Erreur lors de la suppression du compte:', error);
             setError(error.response?.data?.message || 'Erreur lors de la suppression du compte.');
         } finally {
             setLoading(false);
@@ -125,11 +127,12 @@ const Profile: React.FC = () => {
 
     return (
         <MainLayout>
-            <Container maxWidth="md" sx={{ py: 4 }}>
+            <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3, md: 4 }, px: { xs: 2, sm: 3 } }}>
                 <Typography variant="h4" component="h1" gutterBottom sx={{ 
                     fontWeight: 700, 
-                    color: 'primary.main',
-                    mb: 4 
+                    color: 'primary.dark',
+                    mb: { xs: 2, sm: 4 },
+                    fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
                 }}>
                     Mon Profil
                 </Typography>
@@ -149,20 +152,22 @@ const Profile: React.FC = () => {
                 <Grid container spacing={3}>
                     {/* User Information */}
                     <Grid item xs={12} md={6}>
-                        <Paper elevation={2} sx={{ 
-                            p: 3, 
-                            bgcolor: 'rgba(255,255,255,0.95)', 
+                        <Paper elevation={0} sx={{ 
+                            p: { xs: 2.5, sm: 3 }, 
+                            bgcolor: 'rgba(255,255,255,0.92)', 
                             backdropFilter: 'blur(10px)',
                             borderRadius: 3,
-                            boxShadow: '0 2px 20px rgba(0,0,0,0.1)'
+                            border: `1px solid ${theme.palette.divider}`,
+                            boxShadow: `0 2px 16px rgba(84,73,65,0.06)`
                         }}>
                             <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
                                 <Avatar sx={{ 
                                     mr: 2, 
-                                    bgcolor: 'primary.main',
-                                    width: 64,
-                                    height: 64,
-                                    fontSize: '1.5rem'
+                                    background: `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+                                    width: { xs: 52, sm: 64 },
+                                    height: { xs: 52, sm: 64 },
+                                    fontSize: { xs: '1.2rem', sm: '1.5rem' },
+                                    color: '#fff',
                                 }}>
                                     {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                                 </Avatar>
@@ -195,12 +200,13 @@ const Profile: React.FC = () => {
 
                     {/* Actions */}
                     <Grid item xs={12} md={6}>
-                        <Paper elevation={2} sx={{ 
-                            p: 3, 
-                            bgcolor: 'rgba(255,255,255,0.95)', 
+                        <Paper elevation={0} sx={{ 
+                            p: { xs: 2.5, sm: 3 }, 
+                            bgcolor: 'rgba(255,255,255,0.92)', 
                             backdropFilter: 'blur(10px)',
                             borderRadius: 3,
-                            boxShadow: '0 2px 20px rgba(0,0,0,0.1)'
+                            border: `1px solid ${theme.palette.divider}`,
+                            boxShadow: `0 2px 16px rgba(84,73,65,0.06)`
                         }}>
                             <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
                                 Actions
@@ -252,6 +258,7 @@ const Profile: React.FC = () => {
                     onClose={() => setShowPasswordForm(false)}
                     maxWidth="sm"
                     fullWidth
+                    fullScreen={isMobile}
                 >
                     <DialogTitle sx={{ fontWeight: 600 }}>
                         Changer le mot de passe
@@ -323,6 +330,7 @@ const Profile: React.FC = () => {
                     onClose={() => setShowDeleteDialog(false)}
                     maxWidth="sm"
                     fullWidth
+                    fullScreen={isMobile}
                 >
                     <DialogTitle sx={{ fontWeight: 600, color: 'error.main' }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>

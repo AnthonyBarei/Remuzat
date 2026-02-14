@@ -109,7 +109,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const handleStorageChange = (e: StorageEvent) => {
             if (e.key === 'token' && e.newValue === null) {
                 // Token was removed from another tab, logout here too
-                console.log('Token removed from another tab, logging out');
                 setAuthed(false);
                 setUser({ name: null, email: null, token: null });
                 setIsAdmin(false);
@@ -129,7 +128,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     const token = localStorage.getItem('token') || sessionStorage.getItem('token');
                     if (!token) {
                         // No token found, clear auth state
-                        console.log('No token found during periodic check, logging out');
                         setAuthed(false);
                         setUser({ name: null, email: null, token: null });
                         setIsAdmin(false);
@@ -142,7 +140,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     await axios.get('/api/me', config);
                 } catch (error) {
                     // Token is invalid or expired, clear auth state
-                    console.log('Periodic auth check failed:', error);
                     setAuthed(false);
                     setUser({ name: null, email: null, token: null });
                     setIsAdmin(false);
@@ -164,11 +161,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const logged = await loginCheckAsync();
             if (logged) {
-                console.log(logged);
                 await initUser();
             }
         } catch (error) {
-            console.log('Login check failed:', error);
             setAuthed(false);
             setLoading(false);
         }
@@ -179,7 +174,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             // Get token from localStorage or sessionStorage
             const token = localStorage.getItem('token') || sessionStorage.getItem('token');
             if (!token) {
-                console.log('No token found, user not authenticated');
                 setAuthed(false);
                 setLoading(false);
                 return;
@@ -191,12 +185,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const config = { headers: { 'Authorization': 'Bearer ' + token }, };
             const activeUser = await initUserAsync(config);
             if (activeUser) {
-                console.log(activeUser);
                 setAuthed(true);
                 setLoading(false);
             }
         } catch (error) {
-            console.log('Init user failed:', error);
             setAuthed(false);
             setUser({ name: null, email: null, token: null });
             setIsAdmin(false);
@@ -213,7 +205,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const logged_in = await loginAsync(data);
             if (logged_in) {
-                console.log(logged_in);
                 setAuthed(true);
                 // Store token for future use
                 if (user.token) {
@@ -231,7 +222,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             const logged_out = await logoutAsync(config);
             if (logged_out) {
-                console.log(logged_out);
                 setAuthed(false);
                 setUser({ name: null, email: null, token: null });
                 setIsAdmin(false);
@@ -251,7 +241,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
         } catch (error) {
             // Even if logout fails, clear the auth state
-            console.log('Logout failed, clearing auth state anyway:', error);
             setAuthed(false);
             setUser({ name: null, email: null, token: null });
             setIsAdmin(false);
@@ -279,7 +268,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const register = async (data: object): Promise<void> => {
         try {
             const registered = await resgisterAsync(data);
-            console.log(registered);
         } catch (error) {
             throw new Error(error as string);
         }
@@ -300,7 +288,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     
                     // Handle 401 Unauthorized specifically
                     if (error.response.status === 401) {
-                        console.log('User not authenticated (401)');
                         reject('Utilisateur non authentifié');
                         return;
                     }
@@ -308,7 +295,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     if (resp.success === false) {
                         reject(resp.data?.error || 'Échec de l\'authentification');
                     } else {
-                        console.log(resp);
                         reject('Échec de l\'authentification');
                     }
                 } else {
@@ -336,15 +322,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     userData.token = token;
                 }
                 
-                console.log('Init user response userData:', userData);
                 setUser(userData);
                 // Set admin status based on user data
                 const adminStatus = userData.is_admin || userData.role === 'admin' || userData.role === 'super_admin';
-                console.log('Setting admin status from init:', adminStatus, 'based on:', { is_admin: userData.is_admin, role: userData.role });
                 setIsAdmin(adminStatus);
                 resolve(resp.message);
             }).catch((error) => {
-                console.log('Init user error:', error);
                 reject(error);
             });
         });
@@ -362,7 +345,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     userData.name = createFullName(userData);
                 }
                 
-                console.log('Login response userData:', userData);
                 setUser(userData);
                 // Store token for future requests
                 if (userData.token) {
@@ -370,7 +352,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 }
                 // Set admin status based on user data
                 const adminStatus = userData.is_admin || userData.role === 'admin' || userData.role === 'super_admin';
-                console.log('Setting admin status:', adminStatus, 'based on:', { is_admin: userData.is_admin, role: userData.role });
                 setIsAdmin(adminStatus);
                 resolve(resp.message);
             }).catch((error) => {
@@ -381,7 +362,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     if (resp.success === false) {
                         reject(resp.data?.error || 'Échec de la connexion');
                     } else {
-                        console.log(resp);
                         reject('Échec de la connexion');
                     }
                 } else {
@@ -399,7 +379,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 let resp = response.data;
                 resolve(resp.message);
             }).catch((error) => {
-                console.log('Logout error:', error);
                 // Don't reject on logout errors, just resolve
                 resolve('Déconnecté');
             });
@@ -427,7 +406,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                     if (resp.success === false) {
                         reject(resp.data[Object.keys(resp.data)[0]][0]);
                     } else {
-                        console.log(resp);
                         reject('Échec de l\'inscription');
                     }
                 } else {

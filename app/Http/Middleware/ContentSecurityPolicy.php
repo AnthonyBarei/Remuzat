@@ -33,13 +33,15 @@ class ContentSecurityPolicy
      */
     protected function buildPolicy(string $nonce): string
     {
+        $isDev = app()->environment('local');
+
         $directives = [
             "default-src"     => "'self'",
-            "script-src"      => "'self' 'nonce-{$nonce}'",
-            "style-src"       => "'self' 'unsafe-inline' https://fonts.googleapis.com",
+            "script-src"      => "'self' 'nonce-{$nonce}'" . ($isDev ? " http://localhost:* http://127.0.0.1:*" : ""),
+            "style-src"       => "'self' 'unsafe-inline' https://fonts.googleapis.com" . ($isDev ? " http://localhost:* http://127.0.0.1:*" : ""),
             "font-src"        => "'self' https://fonts.gstatic.com",
             "img-src"         => "'self' data: blob:",
-            "connect-src"     => "'self'" . (app()->environment('local') ? " ws://localhost:* http://localhost:*" : ""),
+            "connect-src"     => "'self'" . ($isDev ? " ws://localhost:* http://localhost:* ws://127.0.0.1:* http://127.0.0.1:*" : ""),
             "frame-ancestors" => "'none'",
             "base-uri"        => "'self'",
             "form-action"     => "'self'",

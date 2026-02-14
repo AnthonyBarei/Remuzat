@@ -8,7 +8,6 @@ import {
 } from "@mui/material";
 
 
-import Copyright from "./Copyright";
 import ResponsiveAppBar from "./Appbar/Navbar";
 
 const MainLayout = ({children}) => {
@@ -21,18 +20,25 @@ const MainLayout = ({children}) => {
             <CssBaseline/>
             <ResponsiveAppBar/>
 
-            <Container component="main" maxWidth="false">
+            <Container 
+                component="main" 
+                maxWidth="false"
+                sx={{
+                    px: { xs: 2, sm: 2, md: 3 },
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}
+            >
                 <Toolbar />
                 <Box sx={{ 
                     display: 'flex', 
                     width: '100%', 
                     flexDirection: 'column',
-                    py: 2
+                    flex: 1,
+                    py: { xs: 1, sm: 2 }
                 }}>
                     {children}
                 </Box>
-
-                <Copyright sx={{ my: 2 }}/>
             </Container>
         </Box>
     )

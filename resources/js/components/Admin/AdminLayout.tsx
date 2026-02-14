@@ -1,52 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-    Box,
-    Drawer,
-    AppBar,
-    Toolbar,
-    List,
-    Typography,
-    Divider,
-    IconButton,
-    ListItem,
-    ListItemButton,
-    ListItemIcon,
-    ListItemText,
-    Container,
-    useTheme,
-    useMediaQuery,
-    Fab
+    Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton,
+    ListItem, ListItemButton, ListItemIcon, ListItemText, Container,
+    useTheme, useMediaQuery, Avatar
 } from '@mui/material';
 import {
-    Menu as MenuIcon,
-    Dashboard,
-    BookOnline,
-    People,
-    ChevronLeft,
-    Brightness4,
-    Brightness7
+    Menu as MenuIcon, DashboardOutlined, BookOnlineOutlined,
+    PeopleOutlined, ChevronLeft, ArrowBack
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LogoutButton from '../Layouts/Appbar/LogoutButton.jsx';
+import LavenderLogo from '../common/LavenderLogo';
 import { useAuth } from '../../context/hooks/useAuth';
 
-const drawerWidth = 280;
-
-const colors = {
-    beigeStone: '#F5F0EB',
-    softLavender: '#B9A5C4',
-    provencalBlueGrey: '#6D7885',
-    lightOliveGreen: '#A6B29F',
-    paleTerracotta: '#D8A47F',
-    softSunYellow: '#F4C95D',
-    discreetPoppyRed: '#D96C57',
-    chestnutBrown: '#4A3F35',
-};
+const drawerWidth = 260;
 
 const menuItems = [
-    { text: 'Tableau de bord', icon: <Dashboard />, path: '/admin' },
-    { text: 'Réservations', icon: <BookOnline />, path: '/admin/reservations' },
-    { text: 'Utilisateurs', icon: <People />, path: '/admin/users' },
+    { text: 'Tableau de bord', icon: <DashboardOutlined />, path: '/admin' },
+    { text: 'Réservations', icon: <BookOnlineOutlined />, path: '/admin/reservations' },
+    { text: 'Utilisateurs', icon: <PeopleOutlined />, path: '/admin/users' },
 ];
 
 interface AdminLayoutProps {
@@ -60,182 +32,138 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const drawerRef = useRef<HTMLDivElement>(null);
-    const { authed, isAdmin, loading } = useAuth();
+    const { authed, isAdmin, loading, user } = useAuth();
 
-    // Check authentication and admin status
     useEffect(() => {
         if (!loading) {
-            if (!authed) {
-                // User is not authenticated, redirect to login
-                navigate('/login', { state: { from: location } });
-                return;
-            }
-            
-            if (!isAdmin) {
-                // User is not admin, redirect to reservation page
-                navigate('/reservation');
-                return;
-            }
+            if (!authed) { navigate('/login', { state: { from: location } }); return; }
+            if (!isAdmin) { navigate('/reservation'); return; }
         }
     }, [authed, isAdmin, loading, navigate, location]);
 
-    // Show loading state while checking authentication
     if (loading) {
         return (
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                height: '100vh',
-                bgcolor: colors.beigeStone
-            }}>
-                <Typography variant="h6" sx={{ color: colors.chestnutBrown }}>
-                    Chargement...
-                </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', bgcolor: theme.palette.background.default }}>
+                <Typography variant="h6" sx={{ color: 'text.secondary' }}>Chargement...</Typography>
             </Box>
         );
     }
 
-    // Don't render admin layout if user is not authenticated or not admin
-    if (!authed || !isAdmin) {
-        return null;
-    }
+    if (!authed || !isAdmin) return null;
 
-    // Auto-close drawer on mobile when screen size changes
     useEffect(() => {
-        if (isMobile) {
-            setOpen(false);
-        } else {
-            setOpen(true);
-        }
+        setOpen(!isMobile);
     }, [isMobile]);
 
-    const handleDrawerToggle = () => {
-        setOpen(!open);
-    };
+    const handleDrawerToggle = () => setOpen(!open);
 
-    // Handle focus management for accessibility
-    useEffect(() => {
-        if (!open && isMobile && drawerRef.current) {
-            // Remove focus from drawer elements when closed on mobile
-            const focusableElements = drawerRef.current.querySelectorAll(
-                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-            );
-            focusableElements.forEach((element) => {
-                (element as HTMLElement).blur();
-                (element as HTMLElement).setAttribute('tabindex', '-1');
-            });
-            
-            // Move focus to the main content area
-            const mainContent = document.querySelector('main');
-            if (mainContent) {
-                (mainContent as HTMLElement).focus();
-            }
-        } else if (open && drawerRef.current) {
-            // Restore focusability when drawer is open
-            const focusableElements = drawerRef.current.querySelectorAll(
-                'button, [href], input, select, textarea'
-            );
-            focusableElements.forEach((element) => {
-                if (element.tagName === 'BUTTON') {
-                    (element as HTMLElement).setAttribute('tabindex', '0');
-                }
-            });
-        }
-    }, [open, isMobile]);
-
-
+    const initials = (user as any)?.name?.charAt(0)?.toUpperCase() || 'A';
 
     const drawer = (
-        <Box 
-            ref={drawerRef}
-            aria-hidden={!open && isMobile}
-            sx={{
-                ...((!open && isMobile) && {
-                    '& *': {
-                        pointerEvents: 'none',
-                        userSelect: 'none',
-                    }
-                })
-            }}
-        >
-            <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'space-between',
-                p: 2,
-                borderBottom: `1px solid ${colors.softLavender}30`
+        <Box ref={drawerRef} sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Logo header */}
+            <Box sx={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                px: 2.5, py: 2,
+                borderBottom: `1px solid ${theme.palette.divider}`,
             }}>
-                <Typography variant="h6" sx={{ 
-                    fontWeight: 700, 
-                    color: colors.chestnutBrown,
-                    fontSize: '1.2rem'
-                }}>
-                    Remuzat Admin
-                </Typography>
-                <IconButton 
-                    onClick={handleDrawerToggle} 
-                    sx={{ 
-                        color: colors.provencalBlueGrey,
-                        transform: open ? 'rotate(0deg)' : 'rotate(180deg)',
-                        transition: theme.transitions.create('transform', {
-                            duration: theme.transitions.duration.shortest,
-                        }),
-                    }}
-                    tabIndex={open ? 0 : -1}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, cursor: 'pointer' }}
+                    onClick={() => navigate('/admin')}
                 >
-                    <ChevronLeft />
-                </IconButton>
+                    <LavenderLogo sx={{ fontSize: 24 }} />
+                    <Typography sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.95rem' }}>
+                        Remuzat
+                    </Typography>
+                    <Typography sx={{
+                        fontSize: '0.6rem', fontWeight: 600, color: theme.palette.primary.dark,
+                        bgcolor: `${theme.palette.primary.main}14`, px: 0.8, py: 0.2,
+                        borderRadius: 1, ml: 0.25,
+                    }}>
+                        Admin
+                    </Typography>
+                </Box>
+                {isMobile && (
+                    <IconButton onClick={handleDrawerToggle} size="small" sx={{ color: 'text.secondary' }}>
+                        <ChevronLeft fontSize="small" />
+                    </IconButton>
+                )}
             </Box>
-            <Divider sx={{ borderColor: colors.softLavender + '30' }} />
-            <List sx={{ pt: 1 }}>
-                {menuItems.map((item) => (
-                    <ListItem key={item.text} disablePadding>
-                        <ListItemButton
-                            onClick={() => navigate(item.path)}
-                            selected={location.pathname === item.path}
-                            tabIndex={open ? 0 : -1}
-                            sx={{
-                                mx: 1,
-                                borderRadius: 2,
-                                mb: 0.5,
-                                '&.Mui-selected': {
-                                    bgcolor: colors.softLavender + '30',
-                                    color: colors.chestnutBrown,
-                                    '&:hover': {
-                                        bgcolor: colors.softLavender + '40',
-                                    },
-                                },
-                                '&:hover': {
-                                    bgcolor: colors.beigeStone,
-                                },
-                            }}
-                        >
-                            <ListItemIcon sx={{ 
-                                color: location.pathname === item.path ? colors.chestnutBrown : colors.provencalBlueGrey,
-                                minWidth: 40
-                            }}>
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText 
-                                primary={item.text} 
-                                sx={{ 
-                                    '& .MuiListItemText-primary': {
-                                        fontWeight: location.pathname === item.path ? 600 : 400,
-                                    }
-                                }}
-                            />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
-            </List>
+
+            {/* Navigation */}
+            <Box sx={{ flex: 1, pt: 1.5, px: 1 }}>
+                <Typography variant="overline" sx={{
+                    px: 1.5, color: 'text.secondary', fontSize: '0.6rem', letterSpacing: 1.5,
+                }}>
+                    Menu
+                </Typography>
+                <List disablePadding sx={{ mt: 0.5 }}>
+                    {menuItems.map((item) => {
+                        const isActive = location.pathname === item.path;
+                        return (
+                            <ListItem key={item.text} disablePadding sx={{ mb: 0.25 }}>
+                                <ListItemButton
+                                    onClick={() => { navigate(item.path); if (isMobile) setOpen(false); }}
+                                    sx={{
+                                        borderRadius: 2, py: 1, px: 1.5,
+                                        bgcolor: isActive ? `${theme.palette.primary.main}14` : 'transparent',
+                                        color: isActive ? theme.palette.primary.dark : 'text.primary',
+                                        '&:hover': {
+                                            bgcolor: isActive ? `${theme.palette.primary.main}18` : `${theme.palette.primary.main}08`,
+                                        },
+                                    }}
+                                >
+                                    <ListItemIcon sx={{
+                                        minWidth: 36, color: isActive ? theme.palette.primary.dark : 'text.secondary',
+                                    }}>
+                                        {React.cloneElement(item.icon, { sx: { fontSize: 20 } })}
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={item.text}
+                                        primaryTypographyProps={{
+                                            fontSize: '0.85rem',
+                                            fontWeight: isActive ? 600 : 500,
+                                        }}
+                                    />
+                                    {isActive && (
+                                        <Box sx={{
+                                            width: 4, height: 20, borderRadius: 2,
+                                            bgcolor: theme.palette.primary.main,
+                                        }} />
+                                    )}
+                                </ListItemButton>
+                            </ListItem>
+                        );
+                    })}
+                </List>
+            </Box>
+
+            {/* Footer: back to app */}
+            <Box sx={{ borderTop: `1px solid ${theme.palette.divider}`, p: 1.5 }}>
+                <ListItemButton
+                    onClick={() => navigate('/reservation')}
+                    sx={{
+                        borderRadius: 2, py: 1, px: 1.5,
+                        '&:hover': { bgcolor: `${theme.palette.primary.main}08` },
+                    }}
+                >
+                    <ListItemIcon sx={{ minWidth: 36, color: 'text.secondary' }}>
+                        <ArrowBack sx={{ fontSize: 18 }} />
+                    </ListItemIcon>
+                    <ListItemText
+                        primary="Retour à l'app"
+                        primaryTypographyProps={{ fontSize: '0.82rem', fontWeight: 500, color: 'text.secondary' }}
+                    />
+                </ListItemButton>
+            </Box>
         </Box>
     );
 
     return (
-        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: colors.beigeStone }}>
+        <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: theme.palette.background.default }}>
+            {/* AppBar */}
             <AppBar
                 position="fixed"
+                elevation={0}
                 sx={{
                     width: { md: open ? `calc(100% - ${drawerWidth}px)` : '100%' },
                     ml: { md: open ? `${drawerWidth}px` : 0 },
@@ -243,66 +171,43 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                         easing: theme.transitions.easing.sharp,
                         duration: theme.transitions.duration.leavingScreen,
                     }),
-                    bgcolor: 'white',
-                    color: colors.chestnutBrown,
-                    boxShadow: '0 2px 20px rgba(0,0,0,0.08)',
-                    borderBottom: `1px solid ${colors.softLavender}20`,
+                    bgcolor: 'rgba(255,255,255,0.92)',
+                    backdropFilter: 'blur(12px)',
+                    borderBottom: `1px solid ${theme.palette.divider}`,
+                    color: 'text.primary',
                 }}
             >
-                <Toolbar sx={{ justifyContent: 'space-between' }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <IconButton
-                            color="inherit"
-                            aria-label="open drawer"
-                            edge="start"
-                            onClick={handleDrawerToggle}
-                            sx={{ mr: 2 }}
-                        >
-                            <MenuIcon />
+                <Toolbar sx={{ justifyContent: 'space-between', minHeight: { xs: 56, md: 60 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                        <IconButton onClick={handleDrawerToggle} sx={{ color: 'text.secondary' }}>
+                            <MenuIcon sx={{ fontSize: 22 }} />
                         </IconButton>
-                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                        <Typography sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
                             {menuItems.find(item => item.path === location.pathname)?.text || 'Administration'}
                         </Typography>
                     </Box>
-                    
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <LogoutButton />
-                    </Box>
+                    <LogoutButton />
                 </Toolbar>
             </AppBar>
 
-            <Box
-                component="nav"
-                sx={{ 
-                    width: { md: open ? drawerWidth : 0 }, 
-                    flexShrink: { md: 0 },
-                    transition: theme.transitions.create('width', {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.leavingScreen,
-                    }),
-                }}
-            >
+            {/* Sidebar */}
+            <Box component="nav" sx={{
+                width: { md: open ? drawerWidth : 0 }, flexShrink: { md: 0 },
+                transition: theme.transitions.create('width', {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.leavingScreen,
+                }),
+            }}>
                 <Drawer
                     variant={isMobile ? 'temporary' : 'persistent'}
                     open={open}
                     onClose={handleDrawerToggle}
-                    ModalProps={{
-                        keepMounted: true,
-                        disableAutoFocus: true,
-                        disableEnforceFocus: true,
-                        disableRestoreFocus: true,
-                    }}
+                    ModalProps={{ keepMounted: true, disableAutoFocus: true, disableEnforceFocus: true, disableRestoreFocus: true }}
                     sx={{
                         '& .MuiDrawer-paper': {
-                            boxSizing: 'border-box',
-                            width: drawerWidth,
-                            bgcolor: 'white',
-                            borderRight: `1px solid ${colors.softLavender}20`,
-                            boxShadow: '2px 0 20px rgba(0,0,0,0.08)',
-                            overflowX: 'hidden',
-                        },
-                        '& .MuiBackdrop-root': {
-                            zIndex: theme.zIndex.drawer - 1,
+                            width: drawerWidth, bgcolor: '#fff',
+                            borderRight: `1px solid ${theme.palette.divider}`,
+                            boxShadow: isMobile ? '-4px 0 24px rgba(84,73,65,0.1)' : 'none',
                         },
                     }}
                 >
@@ -310,50 +215,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                 </Drawer>
             </Box>
 
-            <Box
-                component="main"
-                tabIndex={-1}
-                sx={{
-                    flexGrow: 1,
-                    width: { md: open ? `calc(100% - ${drawerWidth}px)` : '100%' },
-                    mt: '64px',
-                    outline: 'none',
-                    transition: theme.transitions.create('width', {
-                        easing: theme.transitions.easing.sharp,
-                        duration: theme.transitions.duration.leavingScreen,
-                    }),
-                }}
-            >
-                <Container maxWidth="xl" sx={{ py: 3 }}>
+            {/* Main content */}
+            <Box component="main" tabIndex={-1} sx={{
+                flexGrow: 1,
+                width: { md: open ? `calc(100% - ${drawerWidth}px)` : '100%' },
+                mt: { xs: '56px', md: '60px' },
+                outline: 'none',
+                transition: theme.transitions.create('width', {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.leavingScreen,
+                }),
+            }}>
+                <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }}>
                     {children}
                 </Container>
             </Box>
-
-            {/* Floating Action Button for mobile when drawer is closed */}
-            {isMobile && !open && (
-                <Fab
-                    color="primary"
-                    aria-label="open menu"
-                    onClick={handleDrawerToggle}
-                    sx={{
-                        position: 'fixed',
-                        bottom: 16,
-                        left: 16,
-                        zIndex: theme.zIndex.fab,
-                        bgcolor: colors.softLavender,
-                        color: colors.chestnutBrown,
-                        '&:hover': {
-                            bgcolor: colors.softLavender + 'DD',
-                        },
-                    }}
-                >
-                    <MenuIcon />
-                </Fab>
-            )}
-
-
         </Box>
     );
 };
 
-export default AdminLayout; 
+export default AdminLayout;

@@ -1,14 +1,10 @@
-// React
 import * as React from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
-// MUI
-import { Avatar, Button, CssBaseline, TextField, Link, Grid, Box, Typography, Container, Alert } from "@mui/material";
+import { Link as RouterLink } from 'react-router-dom';
+import { Button, TextField, Link, Box, Typography, Alert, Stack } from "@mui/material";
 import LockResetOutlinedIcon from '@mui/icons-material/LockResetOutlined';
-// Components
-import Copyright from '../../Layouts/Copyright';
+import AuthLayout from '../../Layouts/AuthLayout.tsx';
 
 export default function ForgotPassword() {
-    const navigate = useNavigate();
     const [email, setEmail] = React.useState('');
     const [alert, setAlert] = React.useState(null);
     const [loading, setLoading] = React.useState(false);
@@ -21,13 +17,9 @@ export default function ForgotPassword() {
         try {
             const response = await fetch('/api/forgot-password', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                 body: JSON.stringify({ email }),
             });
-
             const data = await response.json();
 
             if (response.ok) {
@@ -44,64 +36,68 @@ export default function ForgotPassword() {
     };
 
     return (
-        <Container component="main" maxWidth="xs">
-            <CssBaseline />
-            <Box sx={{ marginTop: 8, display: 'flex', flexDirection: 'column', alignItems: 'center', }}>
-                <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-                    <LockResetOutlinedIcon />
-                </Avatar>
-                <Typography component="h1" variant="h5">
-                    Mot de passe oublié
-                </Typography>
-                <Typography variant="body2" sx={{ mt: 2, textAlign: 'center', color: 'text.secondary' }}>
-                    Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
-                </Typography>
-                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-                    <TextField 
-                        margin="normal" 
-                        required 
-                        fullWidth 
-                        id="email" 
-                        label="Adresse email" 
-                        name="email" 
-                        autoComplete="email" 
+        <AuthLayout>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <Box sx={{
+                    width: 52, height: 52, borderRadius: '50%',
+                    background: (theme) => `linear-gradient(135deg, ${theme.palette.secondary.light} 0%, ${theme.palette.secondary.main} 100%)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                    <LockResetOutlinedIcon sx={{ color: '#fff', fontSize: 24 }} />
+                </Box>
+            </Box>
+
+            <Typography component="h1" variant="h5" align="center" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
+                Mot de passe oublié
+            </Typography>
+            <Typography variant="body2" align="center" sx={{ color: 'text.secondary', mb: 3 }}>
+                Entrez votre email pour recevoir un lien de réinitialisation
+            </Typography>
+
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+                <Stack spacing={2.5}>
+                    <TextField
+                        required
+                        fullWidth
+                        id="email"
+                        label="Adresse email"
+                        name="email"
+                        autoComplete="email"
                         autoFocus
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={loading}
                     />
 
-                    {alert && (
-                        <Alert severity={alert.type} sx={{ mb: 2, mt: 2 }}>
-                            {alert.message}
-                        </Alert>
-                    )}
+                    {alert && (<Alert severity={alert.type}>{alert.message}</Alert>)}
 
-                    <Button 
-                        type="submit" 
-                        fullWidth 
-                        variant="contained" 
-                        sx={{ mt: 3, mb: 2 }}
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        size="large"
                         disabled={loading}
+                        sx={{
+                            py: 1.4,
+                            bgcolor: 'primary.main',
+                            color: 'primary.contrastText',
+                            fontSize: '0.95rem',
+                            '&:hover': { bgcolor: 'primary.dark' }
+                        }}
                     >
-                        {loading ? 'Envoi en cours...' : 'Envoyer le lien de réinitialisation'}
+                        {loading ? 'Envoi en cours...' : 'Envoyer le lien'}
                     </Button>
+                </Stack>
 
-                    <Grid container spacing={1}>
-                        <Grid item xs={12}>
-                            <Link component={RouterLink} to="/login" variant="body2">
-                                Retour à la connexion
-                            </Link>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Link component={RouterLink} to="/signup" variant="body2">
-                                Vous n'avez pas de compte ? S'inscrire
-                            </Link>
-                        </Grid>
-                    </Grid>
-                </Box>
+                <Stack spacing={1} sx={{ mt: 3, alignItems: 'center' }}>
+                    <Link component={RouterLink} to="/login" variant="body2" sx={{ color: 'primary.dark', fontWeight: 600 }}>
+                        Retour à la connexion
+                    </Link>
+                    <Link component={RouterLink} to="/signup" variant="body2" sx={{ color: 'text.secondary' }}>
+                        Pas encore de compte ? S'inscrire
+                    </Link>
+                </Stack>
             </Box>
-            <Copyright sx={{ mt: 8, mb: 4 }} />
-        </Container>
+        </AuthLayout>
     );
-} 
+}

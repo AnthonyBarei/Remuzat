@@ -15,6 +15,9 @@ import Booking from './Booking/Booking';
 import Landing from './Pages/Landing';
 import Admin from './Admin/Admin';
 import Profile from './Pages/Profile';
+import MentionsLegales from './Pages/Legal/MentionsLegales';
+import PolitiqueConfidentialite from './Pages/Legal/PolitiqueConfidentialite';
+import ConditionsGenerales from './Pages/Legal/ConditionsGenerales';
 // Routes
 import { PrivateRoutes } from './Routes/ProtectedRoutes';
 // Auth
@@ -33,6 +36,9 @@ const App = () => {
                     <Route path="/forgot-password" element={<ForgotPassword/>}/>
                     <Route path="/reset-password" element={<ResetPassword/>}/>
                     <Route path="/email/verify" element={<EmailVerification/>}/>
+                    <Route path="/mentions-legales" element={<MentionsLegales/>}/>
+                    <Route path="/politique-de-confidentialite" element={<PolitiqueConfidentialite/>}/>
+                    <Route path="/conditions-generales" element={<ConditionsGenerales/>}/>
                     <Route element={<PrivateRoutes/>}>
                         <Route path="/reservation" element={<Booking/>}></Route>
                         <Route path="/profile" element={<Profile/>}/>

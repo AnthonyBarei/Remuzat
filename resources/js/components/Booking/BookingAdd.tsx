@@ -1,15 +1,14 @@
 import React, { useState, useRef } from 'react';
-import { Button, Box, Grid, FormControl, Alert, Paper } from '@mui/material';
+import { Button, Box, Grid, FormControl, Alert, Paper, Typography, Stack } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { InputLabel, MenuItem, Select } from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
 import moment from 'moment';
 import 'moment/locale/fr';
 
-// Set French locale for moment
 moment.locale('fr');
 
-// Extend Window interface to include axios
 declare global {
     interface Window {
         axios: any;
@@ -35,7 +34,6 @@ const BookingAddForm: React.FC<BookingAddFormProps> = ({ onBookingCreated }) => 
         setError(null);
         setSuccess(null);
 
-        // Validate dates
         if (!startDate || !endDate) {
             setError('Veuillez sélectionner une date de début et de fin.');
             setLoading(false);
@@ -49,7 +47,6 @@ const BookingAddForm: React.FC<BookingAddFormProps> = ({ onBookingCreated }) => 
         }
 
         try {
-            // get form data
             const formData = new FormData(event.currentTarget);
             const data = Object.fromEntries(formData.entries());
             const params = {
@@ -59,24 +56,18 @@ const BookingAddForm: React.FC<BookingAddFormProps> = ({ onBookingCreated }) => 
             };
             const response = await window.axios.post('/api/reservations', params);
             if (response.data.success) {
-                console.log('Booking created successfully:', response.data);
                 setError(null);
                 setSuccess('Réservation créée avec succès !');
                 setStartDate(null);
                 setEndDate(null);
                 formRef.current?.reset();
-                setTimeout(() => {
-                    setSuccess(null);
-                }, 3000);
-                if (onBookingCreated) {
-                    onBookingCreated();
-                }
+                setTimeout(() => setSuccess(null), 3000);
+                if (onBookingCreated) onBookingCreated();
             } else {
                 setSuccess(null);
                 setError(response.data.message || 'Échec de la création de la réservation.');
             }
         } catch (error: any) {
-            console.error('Erreur lors de la création :', error);
             const errorMessage = error.response?.data?.message || 'Échec de la création de la réservation.';
             setError(errorMessage);
             setSuccess(null);
@@ -88,9 +79,7 @@ const BookingAddForm: React.FC<BookingAddFormProps> = ({ onBookingCreated }) => 
     const handleStartDateChange = (date: Date | null) => {
         setStartDate(date);
         setError(null);
-        if (date && endDate && date > endDate) {
-            setEndDate(null);
-        }
+        if (date && endDate && date > endDate) setEndDate(null);
     };
 
     const handleEndDateChange = (date: Date | null) => {
@@ -98,97 +87,100 @@ const BookingAddForm: React.FC<BookingAddFormProps> = ({ onBookingCreated }) => 
         setError(null);
     };
 
+    const duration = startDate && endDate
+        ? moment(endDate).diff(moment(startDate), 'days') + 1
+        : null;
+
     return (
-        <Paper elevation={2} sx={{ 
-            bgcolor: 'paper.main', 
+        <Paper elevation={0} sx={{ 
+            bgcolor: `${theme.palette.primary.main}06`,
             borderRadius: 3, 
-            p: 3, 
-            mb: 3, 
-            boxShadow: '0 2px 12px rgba(0,0,0,0.08)', 
-            border: `1px solid ${theme.palette.divider}` 
+            p: { xs: 2, sm: 2.5 }, 
+            mb: 2, 
+            border: `1px solid ${theme.palette.primary.main}25`,
         }}>
-            <Box component="form" ref={formRef} onSubmit={handleSubmit} sx={{width: '100%'}}>
-                {error && (
-                    <Alert severity="error" sx={{ 
-                        mb: 2, 
-                        bgcolor: 'error.main' + '10', 
-                        color: 'error.main', 
-                        border: `1px solid ${theme.palette.error.main}30` 
+            <Box component="form" ref={formRef} onSubmit={handleSubmit} sx={{ width: '100%' }}>
+                {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+                {success && <Alert severity="success" sx={{ mb: 2 }}>{success}</Alert>}
+
+                <Stack spacing={2}>
+                    <Typography variant="subtitle2" sx={{
+                        fontWeight: 600, color: 'primary.dark', fontSize: '0.85rem',
                     }}>
-                        {error}
-                    </Alert>
-                )}
-                {success && (
-                    <Alert severity="success" sx={{ 
-                        mb: 2, 
-                        bgcolor: 'success.main' + '10', 
-                        color: 'success.main', 
-                        border: `1px solid ${theme.palette.success.main}30` 
-                    }}>
-                        {success}
-                    </Alert>
-                )}
-                <Grid container spacing={2} alignItems={'center'}>
-                    <Grid item>
-                        <DatePicker
-                            label="Date de début"
-                            value={startDate}
-                            onChange={handleStartDateChange}
-                            slotProps={{textField: {size: 'small'}}}
-                            format='DD/MM/YYYY'
-                            name="start_date"
-                            disabled={loading}
-                        />
-                    </Grid>
-                    <Grid item>
-                        <DatePicker
-                            label="Date de fin"
-                            value={endDate}
-                            onChange={handleEndDateChange}
-                            slotProps={{textField: {size: 'small'}}}
-                            format='DD/MM/YYYY'
-                            name="end_date"
-                            disabled={loading}
-                            minDate={startDate || undefined}
-                        />
-                    </Grid>
-                    <Grid item>
-                        <FormControl variant="outlined" size="small">
-                            <InputLabel id="booking-type-select-label">Type</InputLabel>
-                            <Select
-                                labelId="booking-type-select-label"
-                                id="booking-type-select"
-                                label="Type"
-                                name="type"
+                        Nouvelle réservation
+                        {duration && duration > 0 && (
+                            <Typography component="span" sx={{
+                                ml: 1, fontWeight: 500, color: 'text.secondary', fontSize: '0.78rem',
+                            }}>
+                                ({duration} jour{duration > 1 ? 's' : ''})
+                            </Typography>
+                        )}
+                    </Typography>
+
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} sm={6} md="auto">
+                            <DatePicker
+                                label="Date d'arrivée"
+                                value={startDate}
+                                onChange={handleStartDateChange}
+                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                                format='DD/MM/YYYY'
+                                name="start_date"
                                 disabled={loading}
-                                defaultValue="booking"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md="auto">
+                            <DatePicker
+                                label="Date de départ"
+                                value={endDate}
+                                onChange={handleEndDateChange}
+                                slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                                format='DD/MM/YYYY'
+                                name="end_date"
+                                disabled={loading}
+                                minDate={startDate || undefined}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md="auto">
+                            <FormControl variant="outlined" size="small" fullWidth>
+                                <InputLabel id="booking-type-select-label">Type</InputLabel>
+                                <Select
+                                    labelId="booking-type-select-label"
+                                    id="booking-type-select"
+                                    label="Type"
+                                    name="type"
+                                    disabled={loading}
+                                    defaultValue="booking"
+                                >
+                                    <MenuItem value="booking">Réservation</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid item xs={12} sm={6} md="auto">
+                            <Button 
+                                type="submit" 
+                                variant="contained"
+                                fullWidth
+                                disabled={loading || !startDate || !endDate}
+                                startIcon={<SendIcon sx={{ fontSize: 16 }} />}
+                                sx={{
+                                    bgcolor: 'primary.main',
+                                    color: '#fff',
+                                    fontWeight: 600,
+                                    borderRadius: 2,
+                                    px: 3,
+                                    boxShadow: `0 2px 8px ${theme.palette.primary.main}25`,
+                                    '&:hover': {
+                                        bgcolor: 'primary.dark',
+                                        boxShadow: `0 4px 12px ${theme.palette.primary.main}35`,
+                                    }
+                                }}
                             >
-                                <MenuItem value="booking">Réservation</MenuItem>
-                            </Select>
-                        </FormControl>
+                                {loading ? 'Création...' : 'Réserver'}
+                            </Button>
+                        </Grid>
                     </Grid>
-                    <Grid item>
-                        <Button 
-                            type="submit" 
-                            variant="contained"
-                            disabled={loading || !startDate || !endDate}
-                            sx={{
-                                bgcolor: 'primary.main',
-                                color: 'primary.contrastText',
-                                fontWeight: 600,
-                                borderRadius: 2,
-                                px: 3,
-                                boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                                '&:hover': {
-                                    bgcolor: 'primary.dark',
-                                    color: 'primary.contrastText'
-                                }
-                            }}
-                        >
-                            {loading ? 'Création...' : 'Ajouter'}
-                        </Button>
-                    </Grid>
-                </Grid>
+                </Stack>
             </Box>
         </Paper>
     );

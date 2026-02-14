@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Alert, Box } from '@mui/material';
+import { Alert, Box, Typography, Chip, Container } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import CalendarMonthOutlinedIcon from '@mui/icons-material/CalendarMonthOutlined';
 import Navigation from './BookingNavigation';
 import BookingTable from './BookingTable';
 import MainLayout from '../Layouts/Main';
 import { WeekInfo, BookingInfo } from './interfaces';
 import { getCurrentWeekDays, getNextWeekDays, getPreviousWeekDays, getWeekForDate } from './utils';
 import BookingAddForm from './BookingAdd';
+import Footer from '../common/Footer';
 import moment from 'moment';
 
 const week = getCurrentWeekDays();
 
 const Booking: React.FC = () => {
+    const theme = useTheme();
     const [currentWeek, setCurrentWeek] = useState<WeekInfo[]>(week);
     const [bookings, setBookings] = useState<BookingInfo[]>([]);
     const [displayBookingForm, setDisplayBookingForm] = useState<boolean>(false);
@@ -31,13 +35,9 @@ const Booking: React.FC = () => {
             const weekStart = `${weekStartParts[2]}-${weekStartParts[1].padStart(2, '0')}-${weekStartParts[0].padStart(2, '0')}`;
             const weekEnd = `${weekEndParts[2]}-${weekEndParts[1].padStart(2, '0')}-${weekEndParts[0].padStart(2, '0')}`;
             const response = await window.axios.get('/api/reservations', {
-                params: {
-                    start_date: weekStart,
-                    end_date: weekEnd
-                }
+                params: { start_date: weekStart, end_date: weekEnd }
             });
             if (response.data.success) {
-                console.log('Bookings fetched:', response.data.data);
                 const transformedBookings: BookingInfo[] = response.data.data.map((booking: any) => ({
                     id: booking.id,
                     start: booking.start.split(' ')[0],
@@ -52,13 +52,11 @@ const Booking: React.FC = () => {
                     validated_by: booking.validated_by,
                     user: booking.user
                 }));
-                console.log('Transformed bookings:', transformedBookings);
                 setBookings(transformedBookings);
             } else {
                 setError('Impossible de récupérer les réservations.');
             }
         } catch (error: any) {
-            console.error('Erreur lors de la récupération des réservations :', error);
             setError(error.response?.data?.message || 'Impossible de récupérer les réservations.');
         } finally {
             setLoading(false);
@@ -66,41 +64,43 @@ const Booking: React.FC = () => {
         }
     };
 
-    const onPrevWeek = () => {
-        setIsTransitioning(true);
-        const previousWeek = getPreviousWeekDays(currentWeek);
-        setCurrentWeek(previousWeek);
-    };
-
-    const onNextWeek = () => {
-        setIsTransitioning(true);
-        const nextWeek = getNextWeekDays(currentWeek);
-        setCurrentWeek(nextWeek);
-    };
-
-    const onToday = () => {
-        setIsTransitioning(true);
-        const week = getCurrentWeekDays();
-        setCurrentWeek(week);
-    };
-
-    const onWeekSelected = (date: moment.Moment) => {
-        setIsTransitioning(true);
-        const week = getWeekForDate(date.format('YYYY-MM-DD'));
-        setCurrentWeek(week);
-    };
-
-    const onBook = () => {
-        setDisplayBookingForm((displayBookingForm) => !displayBookingForm);
-    };
-
-    const onBookingCreated = () => {
-        getBookings();
-        setDisplayBookingForm(false);
-    };
+    const onPrevWeek = () => { setIsTransitioning(true); setCurrentWeek(getPreviousWeekDays(currentWeek)); };
+    const onNextWeek = () => { setIsTransitioning(true); setCurrentWeek(getNextWeekDays(currentWeek)); };
+    const onToday = () => { setIsTransitioning(true); setCurrentWeek(getCurrentWeekDays()); };
+    const onWeekSelected = (date: moment.Moment) => { setIsTransitioning(true); setCurrentWeek(getWeekForDate(date.format('YYYY-MM-DD'))); };
+    const onBook = () => setDisplayBookingForm(prev => !prev);
+    const onBookingCreated = () => { getBookings(); setDisplayBookingForm(false); };
 
     return (
         <MainLayout>
+            {/* Page header */}
+            <Box sx={{ mt: { xs: 1, sm: 2 }, mb: { xs: 1, sm: 0 } }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+                    <Box sx={{
+                        width: 40, height: 40, borderRadius: 2.5,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        bgcolor: `${theme.palette.primary.main}14`,
+                        color: theme.palette.primary.dark,
+                    }}>
+                        <CalendarMonthOutlinedIcon sx={{ fontSize: 22 }} />
+                    </Box>
+                    <Box>
+                        <Typography variant="h5" sx={{
+                            fontWeight: 700, color: 'text.primary',
+                            fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.5rem' },
+                            lineHeight: 1.2,
+                        }}>
+                            Réservations
+                        </Typography>
+                        <Typography variant="body2" sx={{
+                            color: 'text.secondary', fontSize: '0.82rem', mt: 0.25,
+                        }}>
+                            Consultez et gérez les réservations de la semaine
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
+
             <Navigation 
                 week={currentWeek} 
                 onPrevWeek={onPrevWeek} 
@@ -114,17 +114,17 @@ const Booking: React.FC = () => {
             {displayBookingForm && (
                 <BookingAddForm onBookingCreated={onBookingCreated} />
             )}
+
             {error && (
-                <Box sx={{ mb: 2 }}>
-                    <Alert severity="error" sx={{ fontWeight: 600 }}>
-                        {error}
-                    </Alert>
-                </Box>
+                <Alert severity="error" sx={{ mb: 2 }}>
+                    {error}
+                </Alert>
             )}
+
             <Box sx={{ 
                 transition: 'all 0.3s ease-in-out',
-                opacity: isTransitioning ? 0.7 : 1,
-                transform: isTransitioning ? 'scale(0.98)' : 'scale(1)'
+                opacity: isTransitioning ? 0.6 : 1,
+                transform: isTransitioning ? 'scale(0.99)' : 'scale(1)',
             }}>
                 <BookingTable 
                     week={currentWeek} 
@@ -133,10 +133,12 @@ const Booking: React.FC = () => {
                     onBookingDeleted={getBookings}
                 />
             </Box>
+
+            <Box sx={{ mt: 'auto', pt: { xs: 4, sm: 6 }, mx: { xs: -2, sm: -3 }, mb: { xs: -2, sm: -3 } }}>
+                <Footer />
+            </Box>
         </MainLayout>
     );
 };
 
 export default Booking;
-
-

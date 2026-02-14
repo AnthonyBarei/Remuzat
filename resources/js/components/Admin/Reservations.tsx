@@ -1,138 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Box,
-    Typography,
-    Paper,
-    TextField,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    Button,
-    Chip,
-    IconButton,
-    Tooltip,
-    Stack,
-    Grid,
-    Card,
-    CardContent,
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TablePagination,
-    Menu,
-    ListItemIcon,
-    ListItemText,
-    Alert,
-    CircularProgress,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions
+    Box, Typography, Paper, TextField, FormControl, InputLabel, Select, MenuItem,
+    Button, Chip, IconButton, Stack, Grid, Card, CardContent, Table, TableBody,
+    TableCell, TableContainer, TableHead, TableRow, TablePagination, Menu,
+    ListItemIcon, ListItemText, Alert, CircularProgress, Dialog, DialogTitle,
+    DialogContent, DialogActions, useTheme, useMediaQuery, Skeleton, Avatar
 } from '@mui/material';
 import {
-    CheckCircle,
-    Cancel,
-    Edit,
-    Email,
-    Visibility,
-    Refresh,
-    MoreVert,
-    Delete
+    CheckCircleOutlined, CancelOutlined, EditOutlined, EmailOutlined,
+    RefreshOutlined, MoreVert, DeleteOutlined, SearchOutlined,
+    FilterListOutlined, BookOnlineOutlined
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import moment from 'moment';
 import { useAuth } from '../../context/hooks/useAuth';
 
-const colors = {
-    beigeStone: '#F5F0EB',
-    softLavender: '#B9A5C4',
-    provencalBlueGrey: '#6D7885',
-    lightOliveGreen: '#A6B29F',
-    paleTerracotta: '#D8A47F',
-    softSunYellow: '#F4C95D',
-    discreetPoppyRed: '#D96C57',
-    chestnutBrown: '#4A3F35',
-};
-
 interface User {
-    id: number;
-    firstname: string;
-    lastname: string;
-    email: string;
+    id: number; firstname: string; lastname: string; email: string;
 }
 
 interface Reservation {
-    id: number;
-    start: string;
-    end: string;
-    duration: number;
-    type: string;
-    status: string;
-    created_at: string;
-    user: User | null;
-    validated_by?: User | null;
+    id: number; start: string; end: string; duration: number; type: string;
+    status: string; created_at: string; user: User | null; validated_by?: User | null;
     has_overlap?: boolean;
 }
 
-interface Statistics {
-    pending: number;
-    approved: number;
-    cancelled: number;
-    total: number;
-}
+interface Statistics { pending: number; approved: number; cancelled: number; total: number; }
 
-interface EditFormData {
-    start_date: string;
-    end_date: string;
-    type: string;
-    status: string;
-}
+interface EditFormData { start_date: string; end_date: string; type: string; status: string; }
 
-const getStatusColor = (status: string) => {
+const getStatusConfig = (status: string, theme: any) => {
     switch (status) {
-        case 'pending':
-            return { bg: colors.softSunYellow + '20', color: colors.chestnutBrown, border: colors.softSunYellow };
-        case 'approved':
-            return { bg: colors.lightOliveGreen + '20', color: colors.lightOliveGreen, border: colors.lightOliveGreen };
-        case 'cancelled':
-            return { bg: colors.discreetPoppyRed + '20', color: colors.discreetPoppyRed, border: colors.discreetPoppyRed };
-        default:
-            return { bg: colors.provencalBlueGrey + '20', color: colors.provencalBlueGrey, border: colors.provencalBlueGrey };
+        case 'pending': return { label: 'En attente', bg: `${theme.palette.warning.main}14`, color: theme.palette.warning.dark, border: `${theme.palette.warning.main}40` };
+        case 'approved': return { label: 'Approuvée', bg: `${theme.palette.success.main}14`, color: theme.palette.success.main, border: `${theme.palette.success.main}40` };
+        case 'cancelled': return { label: 'Annulée', bg: `${theme.palette.error.main}14`, color: theme.palette.error.main, border: `${theme.palette.error.main}40` };
+        default: return { label: status, bg: `${theme.palette.grey[500]}14`, color: theme.palette.text.secondary, border: `${theme.palette.grey[400]}` };
     }
 };
 
-const getStatusLabel = (status: string) => {
-    switch (status) {
-        case 'pending':
-            return 'En attente';
-        case 'approved':
-            return 'Approuvée';
-        case 'cancelled':
-            return 'Annulée';
-        default:
-            return status;
-    }
+const MiniStatCard = ({ value, label, color, bgTint }: any) => {
+    const theme = useTheme();
+    return (
+        <Card elevation={0} sx={{
+            bgcolor: '#fff', borderRadius: 2.5,
+            border: `1px solid ${theme.palette.divider}`,
+            transition: 'transform 0.15s ease',
+            '&:hover': { transform: 'translateY(-1px)' },
+        }}>
+            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 }, textAlign: 'center' }}>
+                <Typography sx={{ fontWeight: 700, color, fontSize: '1.5rem', lineHeight: 1.2, mb: 0.25 }}>
+                    {value}
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.72rem', fontWeight: 500 }}>
+                    {label}
+                </Typography>
+            </CardContent>
+        </Card>
+    );
 };
 
 const Reservations: React.FC = () => {
     const { user, authed, loading: authLoading } = useAuth();
     const token = (user as any)?.token || localStorage.getItem('token') || sessionStorage.getItem('token');
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [statistics, setStatistics] = useState<Statistics>({ pending: 0, approved: 0, cancelled: 0, total: 0 });
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
-    const [filters, setFilters] = useState({
-        status: '',
-        search: '',
-        startDate: null,
-        endDate: null,
-        showOverlaps: false
-    });
+    const [filters, setFilters] = useState({ status: '', search: '', startDate: null, endDate: null, showOverlaps: false });
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [totalCount, setTotalCount] = useState(0);
@@ -140,18 +77,12 @@ const Reservations: React.FC = () => {
     const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
     const [menuReservation, setMenuReservation] = useState<Reservation | null>(null);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [editFormData, setEditFormData] = useState<EditFormData>({
-        start_date: '',
-        end_date: '',
-        type: 'booking',
-        status: ''
-    });
+    const [editFormData, setEditFormData] = useState<EditFormData>({ start_date: '', end_date: '', type: 'booking', status: '' });
 
     const fetchReservations = async () => {
         try {
             setLoading(true);
             const params = new URLSearchParams();
-            
             if (filters.status) params.append('status', filters.status);
             if (filters.search) params.append('search', filters.search);
             if (filters.startDate) params.append('start_date', moment(filters.startDate).format('YYYY-MM-DD'));
@@ -161,16 +92,9 @@ const Reservations: React.FC = () => {
             params.append('page', (page + 1).toString());
 
             const response = await fetch(`/api/admin/reservations?${params}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
-            if (!response.ok) {
-                throw new Error('Erreur lors du chargement des réservations');
-            }
-
+            if (!response.ok) throw new Error('Erreur lors du chargement des réservations');
             const result = await response.json();
             setReservations(result.data.data);
             setTotalCount(result.data.total);
@@ -184,131 +108,68 @@ const Reservations: React.FC = () => {
     const fetchStatistics = async () => {
         try {
             const response = await fetch('/api/admin/reservations/statistics', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
             if (response.ok) {
                 const result = await response.json();
                 setStatistics(result.data);
             }
-        } catch (err) {
-            console.error('Failed to fetch statistics:', err);
-        }
+        } catch (err) { /* Failed to fetch statistics */ }
     };
 
     useEffect(() => {
-        console.log('Reservations - useEffect triggered:', { authed, authLoading, token: !!token });
-        // Only fetch data if user is authenticated and not loading
-        if (authed && !authLoading && token) {
-            console.log('Reservations - Fetching data...');
-            // Validate token immediately before making API calls
-            validateTokenAndFetchData();
-        }
+        if (authed && !authLoading && token) validateTokenAndFetchData();
     }, [page, rowsPerPage, filters, authed, authLoading, token]);
 
     const validateTokenAndFetchData = async () => {
         try {
-            // First validate the token
             const response = await fetch('/api/me', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
-            if (!response.ok) {
-                // Token is invalid, this will trigger the auth interceptor
-                throw new Error('Token validation failed');
-            }
-
-            // Token is valid, proceed with data fetching
+            if (!response.ok) throw new Error('Token validation failed');
             fetchReservations();
             fetchStatistics();
-        } catch (error) {
-            console.log('Token validation failed:', error);
-            // The auth interceptor will handle the logout
-        }
+        } catch (error) { /* Token validation failed */ }
     };
-
 
     const handleValidate = async (id: number) => {
         try {
             const response = await fetch(`/api/admin/reservations/${id}/approve`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
-            if (!response.ok) {
-                throw new Error('Erreur lors de la validation');
-            }
-
+            if (!response.ok) throw new Error('Erreur lors de la validation');
             const result = await response.json();
             setSuccess(result.message || 'Réservation validée avec succès');
-            fetchReservations();
-            fetchStatistics();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-        }
+            fetchReservations(); fetchStatistics();
+        } catch (err) { setError(err instanceof Error ? err.message : 'Une erreur est survenue'); }
     };
 
     const handleCancel = async (id: number) => {
         try {
             const response = await fetch(`/api/admin/reservations/${id}/reject`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                method: 'POST', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
-            if (!response.ok) {
-                throw new Error('Erreur lors de l\'annulation');
-            }
-
+            if (!response.ok) throw new Error("Erreur lors de l'annulation");
             const result = await response.json();
             setSuccess(result.message || 'Réservation annulée avec succès');
-            fetchReservations();
-            fetchStatistics();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-        }
+            fetchReservations(); fetchStatistics();
+        } catch (err) { setError(err instanceof Error ? err.message : 'Une erreur est survenue'); }
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer définitivement cette réservation ? Cette action est irréversible.')) {
-            return;
-        }
-
+        if (!confirm('Êtes-vous sûr de vouloir supprimer définitivement cette réservation ? Cette action est irréversible.')) return;
         try {
             const response = await fetch(`/api/admin/reservations/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
+                method: 'DELETE', headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
-            if (!response.ok) {
-                throw new Error('Erreur lors de la suppression');
-            }
-
+            if (!response.ok) throw new Error('Erreur lors de la suppression');
             const result = await response.json();
             setSuccess(result.message || 'Réservation supprimée avec succès');
-            fetchReservations();
-            fetchStatistics();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-        }
+            fetchReservations(); fetchStatistics();
+        } catch (err) { setError(err instanceof Error ? err.message : 'Une erreur est survenue'); }
     };
 
     const handleResendEmail = (id: number) => {
-        console.log('Resend email for reservation:', id);
         setSuccess('Email renvoyé avec succès');
     };
 
@@ -317,51 +178,27 @@ const Reservations: React.FC = () => {
         setEditFormData({
             start_date: moment(reservation.start).format('YYYY-MM-DD'),
             end_date: moment(reservation.end).format('YYYY-MM-DD'),
-            type: reservation.type,
-            status: reservation.status
+            type: reservation.type, status: reservation.status
         });
         setEditDialogOpen(true);
     };
 
     const handleEditSubmit = async () => {
-        if (!menuReservation) {
-            return;
-        }
-
+        if (!menuReservation) return;
         try {
             const response = await fetch(`/api/admin/reservations/${menuReservation.id}`, {
                 method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(editFormData)
             });
-
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || 'Erreur lors de la modification');
             }
-
             const result = await response.json();
-            
-            // Check if there's an overlap warning
-            if (result.data && result.data.overlap_warning) {
-                setSuccess(`⚠️ ${result.data.message}`);
-            } else {
-                setSuccess(result.message || 'Réservation modifiée avec succès');
-            }
-            
-            setEditDialogOpen(false);
-            fetchReservations();
-            fetchStatistics();
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-        }
-    };
-
-    const handleView = (id: number) => {
-        console.log('View reservation:', id);
+            setSuccess(result.data?.overlap_warning ? `⚠️ ${result.data.message}` : (result.message || 'Réservation modifiée avec succès'));
+            setEditDialogOpen(false); fetchReservations(); fetchStatistics();
+        } catch (err) { setError(err instanceof Error ? err.message : 'Une erreur est survenue'); }
     };
 
     const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, reservation: Reservation) => {
@@ -370,112 +207,68 @@ const Reservations: React.FC = () => {
         setMenuReservation(reservation);
     };
 
-    const handleMenuClose = () => {
-        setAnchorEl(null);
-        setSelectedReservation(null);
-        // Don't clear menuReservation here, keep it for the menu actions
-    };
+    const handleMenuClose = () => { setAnchorEl(null); setSelectedReservation(null); };
 
     const handleResetFilters = () => {
         setFilters({ status: '', search: '', startDate: null, endDate: null, showOverlaps: false });
         setPage(0);
     };
 
-    // Show loading state while authentication is being checked
     if (authLoading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-                <CircularProgress />
+                <CircularProgress sx={{ color: theme.palette.primary.main }} />
             </Box>
         );
     }
 
-    // Show error if not authenticated
     if (!authed || !token) {
-        console.log('Reservations - Auth debug:', { authed, token: !!token, user, authLoading });
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-                <Typography variant="h6" sx={{ color: colors.chestnutBrown }}>
-                    Erreur d'authentification
-                </Typography>
-            </Box>
-        );
-    }
-
-    // Show loading state while fetching data
-    if (loading && reservations.length === 0) {
-        return (
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
-                <CircularProgress />
+                <Typography variant="h6" sx={{ color: 'text.secondary' }}>Erreur d'authentification</Typography>
             </Box>
         );
     }
 
     return (
         <Box>
-            <Typography variant="h4" sx={{ 
-                fontWeight: 700, 
-                color: colors.chestnutBrown,
-                mb: 4
-            }}>
-                Réservations
-            </Typography>
-            
+            {/* Header */}
+            <Box sx={{ mb: 3 }}>
+                <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', fontSize: { xs: '1.4rem', sm: '1.75rem' } }}>
+                    Réservations
+                </Typography>
+                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5 }}>
+                    Gérez toutes les réservations du gîte
+                </Typography>
+            </Box>
 
-
-            {error && (
-                <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-                    {error}
-                </Alert>
-            )}
-
-            {success && (
-                <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
-                    {success}
-                </Alert>
-            )}
+            {error && <Alert severity="error" sx={{ mb: 2.5 }} onClose={() => setError(null)}>{error}</Alert>}
+            {success && <Alert severity="success" sx={{ mb: 2.5 }} onClose={() => setSuccess(null)}>{success}</Alert>}
 
             {/* Filters */}
-            <Paper sx={{
-                bgcolor: 'white',
-                borderRadius: 3,
-                p: 3,
-                mb: 3,
-                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-                border: `1px solid ${colors.softLavender}20`,
+            <Paper elevation={0} sx={{
+                bgcolor: '#fff', borderRadius: 3, p: { xs: 2, sm: 2.5 }, mb: 2.5,
+                border: `1px solid ${theme.palette.divider}`,
             }}>
-                <Typography variant="h6" sx={{ 
-                    fontWeight: 600, 
-                    color: colors.chestnutBrown,
-                    mb: 2
-                }}>
-                    Filtres
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                    <FilterListOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.9rem' }}>
+                        Filtres
+                    </Typography>
+                </Box>
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={6} md={3}>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            label="Rechercher"
-                            placeholder="Nom ou email..."
+                        <TextField fullWidth size="small" label="Rechercher" placeholder="Nom ou email..."
                             value={filters.search}
                             onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                            sx={{
-                                '& .MuiOutlinedInput-root': {
-                                    borderRadius: 2,
-                                }
-                            }}
+                            InputProps={{ startAdornment: <SearchOutlined sx={{ color: 'text.secondary', mr: 0.5, fontSize: 18 }} /> }}
                         />
                     </Grid>
                     <Grid item xs={12} sm={6} md={2}>
                         <FormControl fullWidth size="small">
                             <InputLabel>Statut</InputLabel>
-                            <Select
-                                value={filters.status}
-                                label="Statut"
-                                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-                                sx={{ borderRadius: 2 }}
-                            >
+                            <Select value={filters.status} label="Statut"
+                                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}>
                                 <MenuItem value="">Tous</MenuItem>
                                 <MenuItem value="pending">En attente</MenuItem>
                                 <MenuItem value="approved">Approuvées</MenuItem>
@@ -484,395 +277,243 @@ const Reservations: React.FC = () => {
                         </FormControl>
                     </Grid>
                     <Grid item xs={12} sm={6} md={2}>
-                        <DatePicker
-                            label="Date début"
-                            value={filters.startDate}
+                        <DatePicker label="Date début" value={filters.startDate}
                             onChange={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
-                            slotProps={{
-                                textField: {
-                                    size: 'small',
-                                    sx: { borderRadius: 2 }
-                                }
-                            }}
+                            slotProps={{ textField: { size: 'small', fullWidth: true } }}
                         />
                     </Grid>
                     <Grid item xs={12} sm={6} md={2}>
-                        <DatePicker
-                            label="Date fin"
-                            value={filters.endDate}
+                        <DatePicker label="Date fin" value={filters.endDate}
                             onChange={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
-                            slotProps={{
-                                textField: {
-                                    size: 'small',
-                                    sx: { borderRadius: 2 }
-                                }
-                            }}
+                            slotProps={{ textField: { size: 'small', fullWidth: true } }}
                         />
                     </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
+                    <Grid item xs={12} sm={6} md={1.5}>
                         <FormControl fullWidth size="small">
-                            <InputLabel>Filtres spéciaux</InputLabel>
-                            <Select
-                                value={filters.showOverlaps ? 'overlaps' : ''}
-                                label="Filtres spéciaux"
-                                onChange={(e) => setFilters(prev => ({ ...prev, showOverlaps: e.target.value === 'overlaps' }))}
-                                sx={{ borderRadius: 2 }}
-                            >
+                            <InputLabel>Spécial</InputLabel>
+                            <Select value={filters.showOverlaps ? 'overlaps' : ''} label="Spécial"
+                                onChange={(e) => setFilters(prev => ({ ...prev, showOverlaps: e.target.value === 'overlaps' }))}>
                                 <MenuItem value="">Tous</MenuItem>
-                                <MenuItem value="overlaps">Avec chevauchements</MenuItem>
+                                <MenuItem value="overlaps">Chevauchements</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={1}>
-                        <Stack direction="row" spacing={1}>
-                            <Button
-                                variant="outlined"
-                                startIcon={<Refresh />}
-                                onClick={handleResetFilters}
-                                sx={{
-                                    borderColor: colors.softLavender,
-                                    color: colors.provencalBlueGrey,
-                                    borderRadius: 2,
-                                    '&:hover': {
-                                        borderColor: colors.softLavender,
-                                        bgcolor: colors.softLavender + '10'
-                                    }
-                                }}
-                            >
-                                Réinitialiser
-                            </Button>
-                        </Stack>
+                    <Grid item xs={12} sm={6} md={1.5}>
+                        <Button fullWidth variant="outlined" size="small" startIcon={<RefreshOutlined sx={{ fontSize: 16 }} />}
+                            onClick={handleResetFilters}
+                            sx={{
+                                borderColor: theme.palette.divider, color: 'text.secondary',
+                                textTransform: 'none', fontWeight: 500, py: 0.9,
+                                '&:hover': { borderColor: theme.palette.primary.main, color: theme.palette.primary.dark, bgcolor: `${theme.palette.primary.main}08` }
+                            }}>
+                            Réinitialiser
+                        </Button>
                     </Grid>
                 </Grid>
             </Paper>
 
             {/* Stats Cards */}
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                        border: `1px solid ${colors.softLavender}20`,
-                    }}>
-                        <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography variant="h4" sx={{ 
-                                fontWeight: 700, 
-                                color: colors.softSunYellow,
-                                mb: 0.5
-                            }}>
-                                {statistics.pending}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: colors.provencalBlueGrey }}>
-                                En attente
-                            </Typography>
-                        </CardContent>
-                    </Card>
+            <Grid container spacing={2} sx={{ mb: 2.5 }}>
+                <Grid item xs={6} sm={3}>
+                    <MiniStatCard value={statistics.pending} label="En attente" color={theme.palette.warning.dark} />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                        border: `1px solid ${colors.softLavender}20`,
-                    }}>
-                        <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography variant="h4" sx={{ 
-                                fontWeight: 700, 
-                                color: colors.lightOliveGreen,
-                                mb: 0.5
-                            }}>
-                                {statistics.approved}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: colors.provencalBlueGrey }}>
-                                Approuvées
-                            </Typography>
-                        </CardContent>
-                    </Card>
+                <Grid item xs={6} sm={3}>
+                    <MiniStatCard value={statistics.approved} label="Approuvées" color={theme.palette.success.main} />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                        border: `1px solid ${colors.softLavender}20`,
-                    }}>
-                        <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography variant="h4" sx={{ 
-                                fontWeight: 700, 
-                                color: colors.discreetPoppyRed,
-                                mb: 0.5
-                            }}>
-                                {statistics.cancelled}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: colors.provencalBlueGrey }}>
-                                Annulées
-                            </Typography>
-                        </CardContent>
-                    </Card>
+                <Grid item xs={6} sm={3}>
+                    <MiniStatCard value={statistics.cancelled} label="Annulées" color={theme.palette.error.main} />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
-                    <Card sx={{
-                        bgcolor: 'white',
-                        borderRadius: 2,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-                        border: `1px solid ${colors.softLavender}20`,
-                    }}>
-                        <CardContent sx={{ p: 2, textAlign: 'center' }}>
-                            <Typography variant="h4" sx={{ 
-                                fontWeight: 700, 
-                                color: colors.chestnutBrown,
-                                mb: 0.5
-                            }}>
-                                {statistics.total}
-                            </Typography>
-                            <Typography variant="body2" sx={{ color: colors.provencalBlueGrey }}>
-                                Total
-                            </Typography>
-                        </CardContent>
-                    </Card>
+                <Grid item xs={6} sm={3}>
+                    <MiniStatCard value={statistics.total} label="Total" color={theme.palette.text.primary} />
                 </Grid>
             </Grid>
 
             {/* Table */}
-            <Paper sx={{
-                bgcolor: 'white',
-                borderRadius: 3,
-                overflow: 'hidden',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-                border: `1px solid ${colors.softLavender}20`,
+            <Paper elevation={0} sx={{
+                bgcolor: '#fff', borderRadius: 3, overflow: 'hidden',
+                border: `1px solid ${theme.palette.divider}`,
             }}>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: colors.beigeStone }}>
-                                <TableCell sx={{ fontWeight: 600, color: colors.chestnutBrown }}>Client</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: colors.chestnutBrown }}>Dates</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: colors.chestnutBrown }}>Statut</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: colors.chestnutBrown }}>Créée le</TableCell>
-                                <TableCell sx={{ fontWeight: 600, color: colors.chestnutBrown }}>Actions</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {reservations.map((reservation) => (
-                                <TableRow key={reservation.id} sx={{ '&:hover': { bgcolor: colors.beigeStone } }}>
-                                    <TableCell>
-                                        <Box>
-                                            <Typography variant="body2" sx={{ fontWeight: 600, color: colors.chestnutBrown }}>
-                                                {reservation.user ? `${reservation.user.firstname || ''} ${reservation.user.lastname || ''}`.trim() : 'Utilisateur inconnu'}
-                                            </Typography>
-                                            <Typography variant="caption" sx={{ color: colors.provencalBlueGrey }}>
-                                                {reservation.user?.email || 'Email non disponible'}
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box>
-                                            <Typography variant="body2" sx={{ fontWeight: 600, color: colors.chestnutBrown }}>
-                                                {moment(reservation.start).format('DD/MM/YYYY')}
-                                            </Typography>
-                                            <Typography variant="caption" sx={{ color: colors.provencalBlueGrey }}>
-                                                {reservation.duration} jours
-                                            </Typography>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                                            <Chip
-                                                label={getStatusLabel(reservation.status)}
-                                                size="small"
-                                                sx={{
-                                                    bgcolor: getStatusColor(reservation.status).bg,
-                                                    color: getStatusColor(reservation.status).color,
-                                                    border: `1px solid ${getStatusColor(reservation.status).border}`,
-                                                    fontWeight: 600,
-                                                    fontSize: '0.75rem'
-                                                }}
-                                            />
-                                            {reservation.has_overlap && (
-                                                <Chip
-                                                    label="⚠️ Chevauchement"
-                                                    size="small"
-                                                    sx={{
-                                                        bgcolor: colors.softSunYellow + '20',
-                                                        color: colors.chestnutBrown,
-                                                        border: `1px solid ${colors.softSunYellow}`,
-                                                        fontWeight: 600,
-                                                        fontSize: '0.7rem'
-                                                    }}
-                                                />
-                                            )}
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        {moment(reservation.created_at).format('DD/MM/YYYY')}
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton
-                                            size="small"
-                                            onClick={(e) => handleMenuOpen(e, reservation)}
-                                            sx={{ color: colors.provencalBlueGrey }}
-                                        >
-                                            <MoreVert />
-                                        </IconButton>
-                                    </TableCell>
+                {loading && <Box sx={{ px: 3, pt: 2 }}><Skeleton variant="rounded" height={300} /></Box>}
+                {!loading && (
+                    <TableContainer>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: `${theme.palette.primary.main}06` }}>
+                                    {['Client', 'Dates', 'Statut', 'Créée le', 'Actions'].map((h) => (
+                                        <TableCell key={h} sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.78rem', py: 1.5,
+                                            borderBottom: `1px solid ${theme.palette.divider}`,
+                                        }}>{h}</TableCell>
+                                    ))}
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {reservations.map((reservation) => {
+                                    const statusConf = getStatusConfig(reservation.status, theme);
+                                    const userName = reservation.user
+                                        ? `${reservation.user.firstname || ''} ${reservation.user.lastname || ''}`.trim()
+                                        : 'Inconnu';
+                                    const initial = userName.charAt(0).toUpperCase();
+                                    return (
+                                        <TableRow key={reservation.id} sx={{
+                                            '&:hover': { bgcolor: `${theme.palette.primary.main}04` },
+                                            '& td': { borderBottom: `1px solid ${theme.palette.divider}`, py: 1.5 },
+                                        }}>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                    <Avatar sx={{
+                                                        width: 32, height: 32, fontSize: '0.78rem', fontWeight: 600,
+                                                        bgcolor: `${theme.palette.primary.main}14`,
+                                                        color: theme.palette.primary.dark,
+                                                    }}>{initial}</Avatar>
+                                                    <Box>
+                                                        <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.82rem', lineHeight: 1.3 }}>
+                                                            {userName}
+                                                        </Typography>
+                                                        <Typography sx={{ color: 'text.secondary', fontSize: '0.72rem' }}>
+                                                            {reservation.user?.email || ''}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.82rem' }}>
+                                                    {moment(reservation.start).format('DD MMM')} → {moment(reservation.end).format('DD MMM YYYY')}
+                                                </Typography>
+                                                <Typography sx={{ color: 'text.secondary', fontSize: '0.72rem' }}>
+                                                    {reservation.duration} nuit{reservation.duration > 1 ? 's' : ''}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Stack spacing={0.5}>
+                                                    <Chip label={statusConf.label} size="small" sx={{
+                                                        bgcolor: statusConf.bg, color: statusConf.color,
+                                                        border: `1px solid ${statusConf.border}`,
+                                                        fontWeight: 600, fontSize: '0.7rem', height: 24,
+                                                    }} />
+                                                    {reservation.has_overlap && (
+                                                        <Chip label="Chevauchement" size="small" sx={{
+                                                            bgcolor: `${theme.palette.warning.main}14`,
+                                                            color: theme.palette.warning.dark,
+                                                            border: `1px solid ${theme.palette.warning.main}40`,
+                                                            fontWeight: 600, fontSize: '0.65rem', height: 20,
+                                                        }} />
+                                                    )}
+                                                </Stack>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                                                    {moment(reservation.created_at).format('DD/MM/YYYY')}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, reservation)}
+                                                    sx={{
+                                                        color: 'text.secondary', width: 32, height: 32,
+                                                        '&:hover': { bgcolor: `${theme.palette.primary.main}08` },
+                                                    }}>
+                                                    <MoreVert sx={{ fontSize: 18 }} />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                                {reservations.length === 0 && !loading && (
+                                    <TableRow>
+                                        <TableCell colSpan={5} sx={{ textAlign: 'center', py: 6 }}>
+                                            <BookOnlineOutlined sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                                            <Typography sx={{ color: 'text.secondary' }}>Aucune réservation trouvée</Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
                 <TablePagination
-                    component="div"
-                    count={totalCount}
-                    page={page}
+                    component="div" count={totalCount} page={page}
                     onPageChange={(e, newPage) => setPage(newPage)}
                     rowsPerPage={rowsPerPage}
-                    onRowsPerPageChange={(e) => {
-                        setRowsPerPage(parseInt(e.target.value, 10));
-                        setPage(0);
-                    }}
+                    onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
                     rowsPerPageOptions={[5, 10, 25]}
-                    labelRowsPerPage="Lignes par page:"
-                    labelDisplayedRows={({ from, to, count }) => `${from}-${to} sur ${count}`}
+                    labelRowsPerPage="Lignes par page :"
+                    labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                    sx={{ borderTop: `1px solid ${theme.palette.divider}` }}
                 />
             </Paper>
 
             {/* Action Menu */}
-            <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleMenuClose}
-                PaperProps={{
-                    sx: {
-                        bgcolor: 'white',
-                        border: `1px solid ${colors.softLavender}20`,
-                        borderRadius: 2,
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.12)',
-                    }
-                }}
-            >
-                                <MenuItem onClick={() => { 
-                    if (menuReservation) {
-                        handleEdit(menuReservation); 
-                        handleMenuClose(); 
-                    }
-                }}>
-                    <ListItemIcon sx={{ color: colors.paleTerracotta }}>
-                        <Edit fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Modifier</ListItemText>
+            <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}
+                PaperProps={{ sx: {
+                    bgcolor: '#fff', border: `1px solid ${theme.palette.divider}`, borderRadius: 2.5,
+                    boxShadow: '0 8px 24px rgba(84,73,65,0.12)', minWidth: 180,
+                } }}>
+                <MenuItem onClick={() => { if (menuReservation) { handleEdit(menuReservation); handleMenuClose(); } }}
+                    sx={{ py: 1, fontSize: '0.85rem' }}>
+                    <ListItemIcon><EditOutlined fontSize="small" sx={{ color: theme.palette.info.main }} /></ListItemIcon>
+                    <ListItemText primaryTypographyProps={{ fontSize: '0.85rem' }}>Modifier</ListItemText>
                 </MenuItem>
-                {menuReservation && menuReservation.status === 'pending' && (
-                    <MenuItem onClick={() => { handleValidate(menuReservation.id); handleMenuClose(); }}>
-                        <ListItemIcon sx={{ color: colors.lightOliveGreen }}>
-                            <CheckCircle fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>Valider</ListItemText>
+                {menuReservation?.status === 'pending' && (
+                    <MenuItem onClick={() => { handleValidate(menuReservation!.id); handleMenuClose(); }} sx={{ py: 1 }}>
+                        <ListItemIcon><CheckCircleOutlined fontSize="small" sx={{ color: theme.palette.success.main }} /></ListItemIcon>
+                        <ListItemText primaryTypographyProps={{ fontSize: '0.85rem' }}>Valider</ListItemText>
                     </MenuItem>
                 )}
                 {menuReservation && ['pending', 'approved'].includes(menuReservation.status) && (
-                    <MenuItem onClick={() => { handleCancel(menuReservation.id); handleMenuClose(); }}>
-                        <ListItemIcon sx={{ color: colors.discreetPoppyRed }}>
-                            <Cancel fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText>Annuler</ListItemText>
+                    <MenuItem onClick={() => { handleCancel(menuReservation!.id); handleMenuClose(); }} sx={{ py: 1 }}>
+                        <ListItemIcon><CancelOutlined fontSize="small" sx={{ color: theme.palette.error.main }} /></ListItemIcon>
+                        <ListItemText primaryTypographyProps={{ fontSize: '0.85rem' }}>Annuler</ListItemText>
                     </MenuItem>
                 )}
-                <MenuItem onClick={() => { handleResendEmail(menuReservation!.id); handleMenuClose(); }}>
-                    <ListItemIcon sx={{ color: colors.softLavender }}>
-                        <Email fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Renvoyer email</ListItemText>
+                <MenuItem onClick={() => { handleResendEmail(menuReservation!.id); handleMenuClose(); }} sx={{ py: 1 }}>
+                    <ListItemIcon><EmailOutlined fontSize="small" sx={{ color: theme.palette.primary.main }} /></ListItemIcon>
+                    <ListItemText primaryTypographyProps={{ fontSize: '0.85rem' }}>Renvoyer email</ListItemText>
                 </MenuItem>
-                <MenuItem 
-                    onClick={() => { handleDelete(menuReservation!.id); handleMenuClose(); }}
-                    sx={{ 
-                        color: colors.discreetPoppyRed,
-                        '&:hover': { 
-                            bgcolor: colors.discreetPoppyRed + '10' 
-                        }
-                    }}
-                >
-                    <ListItemIcon sx={{ color: colors.discreetPoppyRed }}>
-                        <Delete fontSize="small" />
-                    </ListItemIcon>
-                    <ListItemText>Supprimer définitivement</ListItemText>
+                <MenuItem onClick={() => { handleDelete(menuReservation!.id); handleMenuClose(); }}
+                    sx={{ py: 1, color: theme.palette.error.main, '&:hover': { bgcolor: `${theme.palette.error.main}08` } }}>
+                    <ListItemIcon><DeleteOutlined fontSize="small" sx={{ color: theme.palette.error.main }} /></ListItemIcon>
+                    <ListItemText primaryTypographyProps={{ fontSize: '0.85rem' }}>Supprimer</ListItemText>
                 </MenuItem>
             </Menu>
 
-            {/* Edit Reservation Dialog */}
-            <Dialog 
-                open={editDialogOpen} 
-                onClose={() => setEditDialogOpen(false)} 
-                maxWidth="sm" 
-                fullWidth
-                sx={{ zIndex: 9999 }}
-            >
-                <DialogTitle sx={{ color: colors.chestnutBrown, fontWeight: 600 }}>
+            {/* Edit Dialog */}
+            <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)} maxWidth="sm" fullWidth
+                fullScreen={isMobile}
+                PaperProps={{ sx: { borderRadius: isMobile ? 0 : 3 } }}>
+                <DialogTitle sx={{ fontWeight: 600, fontSize: '1.1rem', pb: 1, borderBottom: `1px solid ${theme.palette.divider}` }}>
                     Modifier la réservation
                 </DialogTitle>
-                <DialogContent>
-                    {error && (
-                        <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-                            {error}
-                        </Alert>
-                    )}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
-                        <TextField
-                            label="Date de début"
-                            type="date"
-                            value={editFormData.start_date}
+                <DialogContent sx={{ pt: '16px !important' }}>
+                    <Stack spacing={2.5} sx={{ mt: 0.5 }}>
+                        <TextField label="Date de début" type="date" value={editFormData.start_date}
                             onChange={(e) => setEditFormData({ ...editFormData, start_date: e.target.value })}
-                            fullWidth
-                            required
-                            InputLabelProps={{ shrink: true }}
-                        />
-                        <TextField
-                            label="Date de fin"
-                            type="date"
-                            value={editFormData.end_date}
+                            fullWidth required InputLabelProps={{ shrink: true }} />
+                        <TextField label="Date de fin" type="date" value={editFormData.end_date}
                             onChange={(e) => setEditFormData({ ...editFormData, end_date: e.target.value })}
-                            fullWidth
-                            required
-                            InputLabelProps={{ shrink: true }}
-                        />
+                            fullWidth required InputLabelProps={{ shrink: true }} />
                         <FormControl fullWidth>
                             <InputLabel>Type</InputLabel>
-                            <Select
-                                value={editFormData.type}
-                                label="Type"
-                                onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}
-                            >
+                            <Select value={editFormData.type} label="Type"
+                                onChange={(e) => setEditFormData({ ...editFormData, type: e.target.value })}>
                                 <MenuItem value="booking">Réservation</MenuItem>
                             </Select>
                         </FormControl>
                         <FormControl fullWidth>
                             <InputLabel>Statut</InputLabel>
-                            <Select
-                                value={editFormData.status}
-                                label="Statut"
-                                onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}
-                            >
+                            <Select value={editFormData.status} label="Statut"
+                                onChange={(e) => setEditFormData({ ...editFormData, status: e.target.value })}>
                                 <MenuItem value="pending">En attente</MenuItem>
                                 <MenuItem value="approved">Approuvée</MenuItem>
                                 <MenuItem value="cancelled">Annulée</MenuItem>
                             </Select>
                         </FormControl>
-                    </Box>
+                    </Stack>
                 </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setEditDialogOpen(false)} sx={{ color: colors.provencalBlueGrey }}>
+                <DialogActions sx={{ px: 3, py: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+                    <Button onClick={() => setEditDialogOpen(false)} sx={{ color: 'text.secondary', textTransform: 'none' }}>
                         Annuler
                     </Button>
-                    <Button
-                        onClick={handleEditSubmit}
-                        variant="contained"
-                        sx={{
-                            bgcolor: colors.lightOliveGreen,
-                            '&:hover': { bgcolor: colors.lightOliveGreen + 'DD' }
-                        }}
-                    >
-                        Modifier
+                    <Button onClick={handleEditSubmit} variant="contained" sx={{ textTransform: 'none', fontWeight: 600 }}>
+                        Enregistrer
                     </Button>
                 </DialogActions>
             </Dialog>
@@ -880,4 +521,4 @@ const Reservations: React.FC = () => {
     );
 };
 
-export default Reservations; 
+export default Reservations;

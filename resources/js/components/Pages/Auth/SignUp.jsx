@@ -1,32 +1,20 @@
-// React
 import * as React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-// MUI
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import CssBaseline from '@mui/material/CssBaseline';
-import TextField from '@mui/material/TextField';
-import Link from '@mui/material/Link';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
-import Alert from '@mui/material/Alert';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-// Components
-import Copyright from '../../Layouts/Copyright';
-// Auth
+import {
+    Button, TextField, Link, Box, Typography, Alert, Stack
+} from "@mui/material";
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import { useAuth } from '../../../context/hooks/useAuth';
+import AuthLayout from '../../Layouts/AuthLayout.tsx';
 
-export default function SignUp({authenticate}) {
-    const [severity, setSeverity] = React.useState("error")
+export default function SignUp() {
+    const [severity, setSeverity] = React.useState("error");
     const [alert, setAlert] = React.useState(null);
     const [isLoading, setIsLoading] = React.useState(false);
     const { register } = useAuth();
 
     const handleSubmit = (event) => {
         event.preventDefault();
-
         setAlert(null);
         setIsLoading(true);
 
@@ -51,45 +39,49 @@ export default function SignUp({authenticate}) {
             setAlert(error.message);
             setIsLoading(false);
         });
-  };
+    };
 
     return (
-        <Container component="main" maxWidth="xs">
-            <CssBaseline />
-            <Box
-            sx={{
-                marginTop: 8,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-            }}
-            >
-                <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-                    <LockOutlinedIcon />
-                </Avatar>
-                <Typography component="h1" variant="h5">
-                    Inscription
-                </Typography>
-                <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 3 }}>
-                    <TextField
-                        autoComplete="given-name"
-                        name="firstName"
-                        required
-                        fullWidth
-                        id="firstName"
-                        label="Prénom"
-                        autoFocus
-                        margin="normal"
-                    />
-                    <TextField
-                        required
-                        fullWidth
-                        id="lastName"
-                        label="Nom"
-                        name="lastName"
-                        autoComplete="family-name"
-                        margin="normal"
-                    />
+        <AuthLayout maxWidth={440}>
+            {/* Icon */}
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
+                <Box sx={{
+                    width: 52, height: 52, borderRadius: '50%',
+                    background: (theme) => `linear-gradient(135deg, ${theme.palette.success.light} 0%, ${theme.palette.success.main} 100%)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                    <PersonAddOutlinedIcon sx={{ color: '#fff', fontSize: 24 }} />
+                </Box>
+            </Box>
+
+            <Typography component="h1" variant="h5" align="center" sx={{ fontWeight: 700, mb: 0.5, color: 'text.primary' }}>
+                Inscription
+            </Typography>
+            <Typography variant="body2" align="center" sx={{ color: 'text.secondary', mb: 3 }}>
+                Créez votre compte pour réserver
+            </Typography>
+
+            <Box component="form" noValidate onSubmit={handleSubmit}>
+                <Stack spacing={2}>
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <TextField
+                            autoComplete="given-name"
+                            name="firstName"
+                            required
+                            fullWidth
+                            id="firstName"
+                            label="Prénom"
+                            autoFocus
+                        />
+                        <TextField
+                            required
+                            fullWidth
+                            id="lastName"
+                            label="Nom"
+                            name="lastName"
+                            autoComplete="family-name"
+                        />
+                    </Stack>
                     <TextField
                         required
                         fullWidth
@@ -97,7 +89,6 @@ export default function SignUp({authenticate}) {
                         label="Adresse email"
                         name="email"
                         autoComplete="email"
-                        margin="normal"
                     />
                     <TextField
                         required
@@ -107,7 +98,6 @@ export default function SignUp({authenticate}) {
                         type="password"
                         id="password"
                         autoComplete="new-password"
-                        margin="normal"
                     />
                     <TextField
                         required
@@ -117,33 +107,34 @@ export default function SignUp({authenticate}) {
                         type="password"
                         id="confirm-password"
                         autoComplete="new-password"
-                        margin="normal"
                     />
-                    
+
+                    {alert && (<Alert severity={severity}>{alert}</Alert>)}
+
                     <Button
                         type="submit"
                         fullWidth
                         variant="contained"
+                        size="large"
                         disabled={isLoading}
-                        sx={{ mt: 3, mb: 2 }}
+                        sx={{
+                            py: 1.4,
+                            bgcolor: 'primary.main',
+                            color: 'primary.contrastText',
+                            fontSize: '0.95rem',
+                            '&:hover': { bgcolor: 'primary.dark' }
+                        }}
                     >
                         {isLoading ? 'Inscription en cours...' : 'S\'inscrire'}
                     </Button>
+                </Stack>
 
-                    { alert && (
-                        <Alert severity={severity} sx={{ mb: 2 }}>{alert}</Alert>
-                    )}
-
-                    <Grid container justifyContent="center">
-                        <Grid item>
-                            <Link component={RouterLink} to="/login" variant="body2">
-                                Vous avez déjà un compte ? Se connecter
-                            </Link>
-                        </Grid>
-                    </Grid>
+                <Box sx={{ mt: 3, textAlign: 'center' }}>
+                    <Link component={RouterLink} to="/login" variant="body2" sx={{ color: 'primary.dark', fontWeight: 600 }}>
+                        Déjà un compte ? Se connecter
+                    </Link>
                 </Box>
             </Box>
-            <Copyright sx={{ mt: 5 }} />
-        </Container>
+        </AuthLayout>
     );
 }
