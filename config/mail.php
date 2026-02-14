@@ -71,9 +71,15 @@ return [
             'transport' => 'array',
         ],
 
+        'brevo' => [
+            'transport' => 'brevo+api',
+            'key' => env('BREVO_API_KEY'),
+        ],
+
         'failover' => [
             'transport' => 'failover',
             'mailers' => [
+                'brevo',
                 'smtp',
                 'log',
             ],
