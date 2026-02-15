@@ -4,12 +4,14 @@ import {
     Button, Chip, IconButton, Stack, Grid, Card, CardContent, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, TablePagination, Menu,
     ListItemIcon, ListItemText, Alert, CircularProgress, Dialog, DialogTitle,
-    DialogContent, DialogActions, useTheme, useMediaQuery, Skeleton, Avatar
+    DialogContent, DialogActions, useTheme, useMediaQuery, Skeleton, Avatar,
+    Collapse, Fab, Pagination
 } from '@mui/material';
 import {
     CheckCircleOutlined, CancelOutlined, EditOutlined, EmailOutlined,
     RefreshOutlined, MoreVert, DeleteOutlined, SearchOutlined,
-    FilterListOutlined, BookOnlineOutlined
+    FilterListOutlined, BookOnlineOutlined, ExpandMore, ExpandLess,
+    EventOutlined
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import moment from 'moment';
@@ -209,10 +211,17 @@ const Reservations: React.FC = () => {
 
     const handleMenuClose = () => { setAnchorEl(null); setSelectedReservation(null); };
 
+    const [filtersOpen, setFiltersOpen] = useState(!isMobile);
+
     const handleResetFilters = () => {
         setFilters({ status: '', search: '', startDate: null, endDate: null, showOverlaps: false });
         setPage(0);
     };
+
+    // Keep filters collapsed on mobile by default
+    useEffect(() => {
+        setFiltersOpen(!isMobile);
+    }, [isMobile]);
 
     if (authLoading) {
         return (
@@ -247,69 +256,94 @@ const Reservations: React.FC = () => {
 
             {/* Filters */}
             <Paper elevation={0} sx={{
-                bgcolor: '#fff', borderRadius: 3, p: { xs: 2, sm: 2.5 }, mb: 2.5,
+                bgcolor: '#fff', borderRadius: 3, mb: 2.5,
                 border: `1px solid ${theme.palette.divider}`,
+                overflow: 'hidden',
             }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                    <FilterListOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.9rem' }}>
-                        Filtres
-                    </Typography>
+                <Box
+                    onClick={() => isMobile && setFiltersOpen(!filtersOpen)}
+                    sx={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        gap: 1, px: { xs: 2, sm: 2.5 }, pt: { xs: 1.5, sm: 2.5 }, pb: filtersOpen ? 0 : { xs: 1.5, sm: 2.5 },
+                        cursor: isMobile ? 'pointer' : 'default',
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <FilterListOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.9rem' }}>
+                            Filtres
+                        </Typography>
+                        {isMobile && !filtersOpen && (filters.status || filters.search || filters.startDate || filters.endDate || filters.showOverlaps) && (
+                            <Chip label="Actifs" size="small" sx={{
+                                height: 20, fontSize: '0.65rem', fontWeight: 600,
+                                bgcolor: `${theme.palette.primary.main}14`, color: theme.palette.primary.dark,
+                            }} />
+                        )}
+                    </Box>
+                    {isMobile && (
+                        <IconButton size="small" sx={{ color: 'text.secondary' }}>
+                            {filtersOpen ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+                        </IconButton>
+                    )}
                 </Box>
-                <Grid container spacing={2} alignItems="center">
-                    <Grid item xs={12} sm={6} md={3}>
-                        <TextField fullWidth size="small" label="Rechercher" placeholder="Nom ou email..."
-                            value={filters.search}
-                            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-                            InputProps={{ startAdornment: <SearchOutlined sx={{ color: 'text.secondary', mr: 0.5, fontSize: 18 }} /> }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <FormControl fullWidth size="small">
-                            <InputLabel>Statut</InputLabel>
-                            <Select value={filters.status} label="Statut"
-                                onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}>
-                                <MenuItem value="">Tous</MenuItem>
-                                <MenuItem value="pending">En attente</MenuItem>
-                                <MenuItem value="approved">Approuvées</MenuItem>
-                                <MenuItem value="cancelled">Annulées</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <DatePicker label="Date début" value={filters.startDate}
-                            onChange={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
-                            slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={2}>
-                        <DatePicker label="Date fin" value={filters.endDate}
-                            onChange={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
-                            slotProps={{ textField: { size: 'small', fullWidth: true } }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={1.5}>
-                        <FormControl fullWidth size="small">
-                            <InputLabel>Spécial</InputLabel>
-                            <Select value={filters.showOverlaps ? 'overlaps' : ''} label="Spécial"
-                                onChange={(e) => setFilters(prev => ({ ...prev, showOverlaps: e.target.value === 'overlaps' }))}>
-                                <MenuItem value="">Tous</MenuItem>
-                                <MenuItem value="overlaps">Chevauchements</MenuItem>
-                            </Select>
-                        </FormControl>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={1.5}>
-                        <Button fullWidth variant="outlined" size="small" startIcon={<RefreshOutlined sx={{ fontSize: 16 }} />}
-                            onClick={handleResetFilters}
-                            sx={{
-                                borderColor: theme.palette.divider, color: 'text.secondary',
-                                textTransform: 'none', fontWeight: 500, py: 0.9,
-                                '&:hover': { borderColor: theme.palette.primary.main, color: theme.palette.primary.dark, bgcolor: `${theme.palette.primary.main}08` }
-                            }}>
-                            Réinitialiser
-                        </Button>
-                    </Grid>
-                </Grid>
+                <Collapse in={filtersOpen}>
+                    <Box sx={{ px: { xs: 2, sm: 2.5 }, pb: { xs: 2, sm: 2.5 }, pt: { xs: 1.5, sm: 2 } }}>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} sm={6} md={3}>
+                                <TextField fullWidth size="small" label="Rechercher" placeholder="Nom ou email..."
+                                    value={filters.search}
+                                    onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                                    InputProps={{ startAdornment: <SearchOutlined sx={{ color: 'text.secondary', mr: 0.5, fontSize: 18 }} /> }}
+                                />
+                            </Grid>
+                            <Grid item xs={6} sm={6} md={2}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Statut</InputLabel>
+                                    <Select value={filters.status} label="Statut"
+                                        onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}>
+                                        <MenuItem value="">Tous</MenuItem>
+                                        <MenuItem value="pending">En attente</MenuItem>
+                                        <MenuItem value="approved">Approuvées</MenuItem>
+                                        <MenuItem value="cancelled">Annulées</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={6} sm={6} md={2}>
+                                <FormControl fullWidth size="small">
+                                    <InputLabel>Spécial</InputLabel>
+                                    <Select value={filters.showOverlaps ? 'overlaps' : ''} label="Spécial"
+                                        onChange={(e) => setFilters(prev => ({ ...prev, showOverlaps: e.target.value === 'overlaps' }))}>
+                                        <MenuItem value="">Tous</MenuItem>
+                                        <MenuItem value="overlaps">Chevauchements</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={6} sm={6} md={2}>
+                                <DatePicker label="Date début" value={filters.startDate}
+                                    onChange={(date) => setFilters(prev => ({ ...prev, startDate: date }))}
+                                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                                />
+                            </Grid>
+                            <Grid item xs={6} sm={6} md={2}>
+                                <DatePicker label="Date fin" value={filters.endDate}
+                                    onChange={(date) => setFilters(prev => ({ ...prev, endDate: date }))}
+                                    slotProps={{ textField: { size: 'small', fullWidth: true } }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={1}>
+                                <Button fullWidth variant="outlined" size="small" startIcon={<RefreshOutlined sx={{ fontSize: 16 }} />}
+                                    onClick={handleResetFilters}
+                                    sx={{
+                                        borderColor: theme.palette.divider, color: 'text.secondary',
+                                        textTransform: 'none', fontWeight: 500, py: 0.9,
+                                        '&:hover': { borderColor: theme.palette.primary.main, color: theme.palette.primary.dark, bgcolor: `${theme.palette.primary.main}08` }
+                                    }}>
+                                    Réinitialiser
+                                </Button>
+                            </Grid>
+                        </Grid>
+                    </Box>
+                </Collapse>
             </Paper>
 
             {/* Stats Cards */}
@@ -328,13 +362,176 @@ const Reservations: React.FC = () => {
                 </Grid>
             </Grid>
 
-            {/* Table */}
-            <Paper elevation={0} sx={{
-                bgcolor: '#fff', borderRadius: 3, overflow: 'hidden',
-                border: `1px solid ${theme.palette.divider}`,
-            }}>
-                {loading && <Box sx={{ px: 3, pt: 2 }}><Skeleton variant="rounded" height={300} /></Box>}
-                {!loading && (
+            {/* Table (desktop) / Cards (mobile) */}
+            {loading && (
+                <Box sx={{ px: 1 }}>
+                    {isMobile ? (
+                        <Stack spacing={1.5}>
+                            {[0, 1, 2].map(i => <Skeleton key={i} variant="rounded" height={120} sx={{ borderRadius: 3 }} />)}
+                        </Stack>
+                    ) : (
+                        <Paper elevation={0} sx={{ bgcolor: '#fff', borderRadius: 3, border: `1px solid ${theme.palette.divider}`, p: 3 }}>
+                            <Skeleton variant="rounded" height={300} />
+                        </Paper>
+                    )}
+                </Box>
+            )}
+
+            {!loading && isMobile && (
+                /* ===== MOBILE CARD VIEW ===== */
+                <Box>
+                    {reservations.length === 0 ? (
+                        <Paper elevation={0} sx={{
+                            bgcolor: '#fff', borderRadius: 3, p: 4, textAlign: 'center',
+                            border: `1px solid ${theme.palette.divider}`,
+                        }}>
+                            <BookOnlineOutlined sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                            <Typography sx={{ color: 'text.secondary' }}>Aucune réservation trouvée</Typography>
+                        </Paper>
+                    ) : (
+                        <Stack spacing={1.5}>
+                            {reservations.map((reservation) => {
+                                const statusConf = getStatusConfig(reservation.status, theme);
+                                const userName = reservation.user
+                                    ? `${reservation.user.firstname || ''} ${reservation.user.lastname || ''}`.trim()
+                                    : 'Inconnu';
+                                const initial = userName.charAt(0).toUpperCase();
+                                return (
+                                    <Card key={reservation.id} elevation={0} sx={{
+                                        bgcolor: '#fff', borderRadius: 3,
+                                        border: `1px solid ${theme.palette.divider}`,
+                                        '&:active': { bgcolor: `${theme.palette.primary.main}04` },
+                                    }}>
+                                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                            {/* Top row: user + actions */}
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flex: 1, minWidth: 0 }}>
+                                                    <Avatar sx={{
+                                                        width: 36, height: 36, fontSize: '0.82rem', fontWeight: 600,
+                                                        bgcolor: `${theme.palette.primary.main}14`,
+                                                        color: theme.palette.primary.dark, flexShrink: 0,
+                                                    }}>{initial}</Avatar>
+                                                    <Box sx={{ minWidth: 0 }}>
+                                                        <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.88rem', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {userName}
+                                                        </Typography>
+                                                        <Typography sx={{ color: 'text.secondary', fontSize: '0.72rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {reservation.user?.email || ''}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, reservation)}
+                                                    sx={{
+                                                        color: 'text.secondary', width: 36, height: 36, flexShrink: 0,
+                                                        '&:hover': { bgcolor: `${theme.palette.primary.main}08` },
+                                                    }}>
+                                                    <MoreVert sx={{ fontSize: 20 }} />
+                                                </IconButton>
+                                            </Box>
+
+                                            {/* Date + duration row */}
+                                            <Box sx={{
+                                                display: 'flex', alignItems: 'center', gap: 1, mb: 1.5,
+                                                p: 1.25, borderRadius: 2, bgcolor: `${theme.palette.primary.main}04`,
+                                            }}>
+                                                <EventOutlined sx={{ fontSize: 16, color: 'text.secondary' }} />
+                                                <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.82rem', flex: 1 }}>
+                                                    {moment(reservation.start).format('DD MMM')} → {moment(reservation.end).format('DD MMM YYYY')}
+                                                </Typography>
+                                                <Chip label={`${reservation.duration} nuit${reservation.duration > 1 ? 's' : ''}`}
+                                                    size="small" sx={{
+                                                        height: 22, fontSize: '0.68rem', fontWeight: 600,
+                                                        bgcolor: `${theme.palette.primary.main}14`, color: theme.palette.primary.dark,
+                                                    }}
+                                                />
+                                            </Box>
+
+                                            {/* Bottom row: status + date */}
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    <Chip label={statusConf.label} size="small" sx={{
+                                                        bgcolor: statusConf.bg, color: statusConf.color,
+                                                        border: `1px solid ${statusConf.border}`,
+                                                        fontWeight: 600, fontSize: '0.7rem', height: 24,
+                                                    }} />
+                                                    {reservation.has_overlap && (
+                                                        <Chip label="Chevauchement" size="small" sx={{
+                                                            bgcolor: `${theme.palette.warning.main}14`,
+                                                            color: theme.palette.warning.dark,
+                                                            border: `1px solid ${theme.palette.warning.main}40`,
+                                                            fontWeight: 600, fontSize: '0.65rem', height: 20,
+                                                        }} />
+                                                    )}
+                                                </Box>
+                                                <Typography sx={{ color: 'text.secondary', fontSize: '0.72rem' }}>
+                                                    {moment(reservation.created_at).format('DD/MM/YY')}
+                                                </Typography>
+                                            </Box>
+
+                                            {/* Quick action buttons for pending reservations */}
+                                            {reservation.status === 'pending' && (
+                                                <Box sx={{ display: 'flex', gap: 1, mt: 1.5, pt: 1.5, borderTop: `1px solid ${theme.palette.divider}` }}>
+                                                    <Button
+                                                        size="small" fullWidth variant="contained"
+                                                        startIcon={<CheckCircleOutlined sx={{ fontSize: 16 }} />}
+                                                        onClick={() => handleValidate(reservation.id)}
+                                                        sx={{
+                                                            textTransform: 'none', fontWeight: 600, fontSize: '0.78rem',
+                                                            borderRadius: 2, py: 0.75,
+                                                            bgcolor: theme.palette.success.main,
+                                                            '&:hover': { bgcolor: theme.palette.success.dark },
+                                                        }}
+                                                    >
+                                                        Valider
+                                                    </Button>
+                                                    <Button
+                                                        size="small" fullWidth variant="outlined"
+                                                        startIcon={<CancelOutlined sx={{ fontSize: 16 }} />}
+                                                        onClick={() => handleCancel(reservation.id)}
+                                                        sx={{
+                                                            textTransform: 'none', fontWeight: 600, fontSize: '0.78rem',
+                                                            borderRadius: 2, py: 0.75,
+                                                            borderColor: theme.palette.error.main, color: theme.palette.error.main,
+                                                            '&:hover': { bgcolor: `${theme.palette.error.main}08`, borderColor: theme.palette.error.dark },
+                                                        }}
+                                                    >
+                                                        Refuser
+                                                    </Button>
+                                                </Box>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </Stack>
+                    )}
+
+                    {/* Mobile pagination */}
+                    {totalCount > rowsPerPage && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2.5, mb: 1 }}>
+                            <Pagination
+                                count={Math.ceil(totalCount / rowsPerPage)}
+                                page={page + 1}
+                                onChange={(e, newPage) => setPage(newPage - 1)}
+                                size="medium"
+                                sx={{
+                                    '& .MuiPaginationItem-root': {
+                                        fontWeight: 600, fontSize: '0.82rem',
+                                        minWidth: 36, height: 36,
+                                    },
+                                }}
+                            />
+                        </Box>
+                    )}
+                </Box>
+            )}
+
+            {!loading && !isMobile && (
+                /* ===== DESKTOP TABLE VIEW ===== */
+                <Paper elevation={0} sx={{
+                    bgcolor: '#fff', borderRadius: 3, overflow: 'hidden',
+                    border: `1px solid ${theme.palette.divider}`,
+                }}>
                     <TableContainer>
                         <Table>
                             <TableHead>
@@ -417,7 +614,7 @@ const Reservations: React.FC = () => {
                                         </TableRow>
                                     );
                                 })}
-                                {reservations.length === 0 && !loading && (
+                                {reservations.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={5} sx={{ textAlign: 'center', py: 6 }}>
                                             <BookOnlineOutlined sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
@@ -428,18 +625,18 @@ const Reservations: React.FC = () => {
                             </TableBody>
                         </Table>
                     </TableContainer>
-                )}
-                <TablePagination
-                    component="div" count={totalCount} page={page}
-                    onPageChange={(e, newPage) => setPage(newPage)}
-                    rowsPerPage={rowsPerPage}
-                    onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
-                    rowsPerPageOptions={[5, 10, 25]}
-                    labelRowsPerPage="Lignes par page :"
-                    labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
-                    sx={{ borderTop: `1px solid ${theme.palette.divider}` }}
-                />
-            </Paper>
+                    <TablePagination
+                        component="div" count={totalCount} page={page}
+                        onPageChange={(e, newPage) => setPage(newPage)}
+                        rowsPerPage={rowsPerPage}
+                        onRowsPerPageChange={(e) => { setRowsPerPage(parseInt(e.target.value, 10)); setPage(0); }}
+                        rowsPerPageOptions={[5, 10, 25]}
+                        labelRowsPerPage="Lignes par page :"
+                        labelDisplayedRows={({ from, to, count }) => `${from}–${to} sur ${count}`}
+                        sx={{ borderTop: `1px solid ${theme.palette.divider}` }}
+                    />
+                </Paper>
+            )}
 
             {/* Action Menu */}
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}

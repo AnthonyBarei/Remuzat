@@ -39,25 +39,27 @@ const defaultDashboardData: DashboardData = {
 
 const StatCard = ({ title, value, icon, bgTint, iconColor, trend, subtitle }: any) => {
     const theme = useTheme();
+    const isXs = useMediaQuery(theme.breakpoints.down('sm'));
     return (
         <Card elevation={0} sx={{
-            bgcolor: '#fff', borderRadius: 3,
+            bgcolor: '#fff', borderRadius: { xs: 2.5, sm: 3 },
             border: `1px solid ${theme.palette.divider}`,
             transition: 'transform 0.2s ease, box-shadow 0.2s ease',
             '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(84,73,65,0.08)' },
+            height: '100%',
         }}>
-            <CardContent sx={{ p: { xs: 2, sm: 2.5 }, '&:last-child': { pb: { xs: 2, sm: 2.5 } } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.5 }}>
+            <CardContent sx={{ p: { xs: 1.75, sm: 2.5 }, '&:last-child': { pb: { xs: 1.75, sm: 2.5 } } }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: { xs: 1, sm: 1.5 } }}>
                     <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.5, fontWeight: 500, fontSize: '0.78rem' }}>
+                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 0.25, fontWeight: 500, fontSize: { xs: '0.68rem', sm: '0.78rem' } }}>
                             {title}
                         </Typography>
-                        <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', fontSize: { xs: '1.5rem', sm: '1.75rem' } }}>
+                        <Typography variant="h4" sx={{ fontWeight: 700, color: 'text.primary', fontSize: { xs: '1.35rem', sm: '1.75rem' } }}>
                             {value}
                         </Typography>
                     </Box>
                     <Box sx={{
-                        p: 1.25, borderRadius: 2.5, bgcolor: bgTint, color: iconColor,
+                        p: { xs: 0.85, sm: 1.25 }, borderRadius: { xs: 2, sm: 2.5 }, bgcolor: bgTint, color: iconColor,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
                         {icon}
@@ -69,21 +71,23 @@ const StatCard = ({ title, value, icon, bgTint, iconColor, trend, subtitle }: an
                     </Typography>
                 )}
                 {trend !== undefined && trend !== null && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, flexWrap: 'wrap' }}>
                         {trend >= 0 ? (
-                            <TrendingUp sx={{ fontSize: 15, color: 'success.main' }} />
+                            <TrendingUp sx={{ fontSize: { xs: 13, sm: 15 }, color: 'success.main' }} />
                         ) : (
-                            <TrendingDown sx={{ fontSize: 15, color: 'error.main' }} />
+                            <TrendingDown sx={{ fontSize: { xs: 13, sm: 15 }, color: 'error.main' }} />
                         )}
                         <Typography variant="body2" sx={{
                             color: trend >= 0 ? 'success.main' : 'error.main',
-                            fontWeight: 600, fontSize: '0.75rem',
+                            fontWeight: 600, fontSize: { xs: '0.68rem', sm: '0.75rem' },
                         }}>
                             {trend >= 0 ? '+' : ''}{trend}%
                         </Typography>
-                        <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.72rem' }}>
-                            vs mois dernier
-                        </Typography>
+                        {!isXs && (
+                            <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '0.72rem' }}>
+                                vs mois dernier
+                            </Typography>
+                        )}
                     </Box>
                 )}
             </CardContent>
@@ -157,10 +161,10 @@ const Dashboard: React.FC = () => {
             <Box>
                 <Skeleton variant="text" width={220} height={40} sx={{ mb: 1 }} />
                 <Skeleton variant="text" width={300} height={20} sx={{ mb: 3 }} />
-                <Grid container spacing={2.5}>
+                <Grid container spacing={{ xs: 1.5, sm: 2.5 }}>
                     {[0, 1, 2, 3].map(i => (
-                        <Grid item xs={12} sm={6} md={3} key={i}>
-                            <Skeleton variant="rounded" height={140} sx={{ borderRadius: 3 }} />
+                        <Grid item xs={6} sm={6} md={3} key={i}>
+                            <Skeleton variant="rounded" height={{ xs: 110, sm: 140 }} sx={{ borderRadius: 3 }} />
                         </Grid>
                     ))}
                 </Grid>
@@ -187,42 +191,42 @@ const Dashboard: React.FC = () => {
             )}
 
             {/* Summary Cards */}
-            <Grid container spacing={2.5} sx={{ mb: 3.5 }}>
-                <Grid item xs={12} sm={6} md={3}>
+            <Grid container spacing={{ xs: 1.5, sm: 2.5 }} sx={{ mb: { xs: 2.5, sm: 3.5 } }}>
+                <Grid item xs={6} sm={6} md={3}>
                     <StatCard
-                        title="Réservations en attente"
+                        title="En attente"
                         value={dashboardData.summary.reservations.pending}
-                        icon={<BookOnlineOutlined sx={{ fontSize: 22 }} />}
+                        icon={<BookOnlineOutlined sx={{ fontSize: { xs: 18, sm: 22 } }} />}
                         bgTint={`${theme.palette.warning.main}14`}
                         iconColor={theme.palette.warning.dark}
                         trend={dashboardData.summary.reservations.growth}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={6} sm={6} md={3}>
                     <StatCard
                         title="Annulations"
                         value={dashboardData.summary.reservations.cancelled}
-                        icon={<CancelOutlined sx={{ fontSize: 22 }} />}
+                        icon={<CancelOutlined sx={{ fontSize: { xs: 18, sm: 22 } }} />}
                         bgTint={`${theme.palette.error.main}14`}
                         iconColor={theme.palette.error.main}
                         trend={dashboardData.quick_stats.cancellation_rate}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={6} sm={6} md={3}>
                     <StatCard
                         title="Séjours à venir"
                         value={dashboardData.summary.reservations.upcoming}
-                        icon={<EventOutlined sx={{ fontSize: 22 }} />}
+                        icon={<EventOutlined sx={{ fontSize: { xs: 18, sm: 22 } }} />}
                         bgTint={`${theme.palette.success.main}14`}
                         iconColor={theme.palette.success.main}
                         trend={dashboardData.summary.reservations.upcoming_growth}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={6} sm={6} md={3}>
                     <StatCard
-                        title="Nouveaux utilisateurs"
+                        title="Nv. utilisateurs"
                         value={dashboardData.summary.users.new_this_month}
-                        icon={<PeopleOutlined sx={{ fontSize: 22 }} />}
+                        icon={<PeopleOutlined sx={{ fontSize: { xs: 18, sm: 22 } }} />}
                         bgTint={`${theme.palette.primary.main}14`}
                         iconColor={theme.palette.primary.dark}
                         trend={dashboardData.summary.users.growth}

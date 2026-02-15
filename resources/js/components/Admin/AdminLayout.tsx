@@ -2,7 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
     Box, Drawer, AppBar, Toolbar, List, Typography, Divider, IconButton,
     ListItem, ListItemButton, ListItemIcon, ListItemText, Container,
-    useTheme, useMediaQuery, Avatar
+    useTheme, useMediaQuery, Avatar, BottomNavigation, BottomNavigationAction,
+    Paper, SwipeableDrawer
 } from '@mui/material';
 import {
     Menu as MenuIcon, DashboardOutlined, BookOnlineOutlined,
@@ -158,6 +159,9 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
         </Box>
     );
 
+    // Get current bottom nav value from path
+    const currentNavValue = menuItems.findIndex(item => item.path === location.pathname);
+
     return (
         <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: theme.palette.background.default }}>
             {/* AppBar */}
@@ -177,20 +181,51 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     color: 'text.primary',
                 }}
             >
-                <Toolbar sx={{ justifyContent: 'space-between', minHeight: { xs: 56, md: 60 } }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                        <IconButton onClick={handleDrawerToggle} sx={{ color: 'text.secondary' }}>
-                            <MenuIcon sx={{ fontSize: 22 }} />
-                        </IconButton>
-                        <Typography sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
-                            {menuItems.find(item => item.path === location.pathname)?.text || 'Administration'}
-                        </Typography>
+                <Toolbar sx={{ justifyContent: 'space-between', minHeight: { xs: 52, md: 60 } }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {/* Hide hamburger on mobile since we have bottom nav */}
+                        {!isMobile && (
+                            <IconButton onClick={handleDrawerToggle} sx={{ color: 'text.secondary' }}>
+                                <MenuIcon sx={{ fontSize: 22 }} />
+                            </IconButton>
+                        )}
+                        {isMobile && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, pl: 0.5 }}>
+                                <LavenderLogo sx={{ fontSize: 20 }} />
+                                <Typography sx={{ fontWeight: 700, color: 'text.primary', fontSize: '0.88rem' }}>
+                                    Remuzat
+                                </Typography>
+                                <Typography sx={{
+                                    fontSize: '0.55rem', fontWeight: 600, color: theme.palette.primary.dark,
+                                    bgcolor: `${theme.palette.primary.main}14`, px: 0.7, py: 0.15,
+                                    borderRadius: 0.75,
+                                }}>
+                                    Admin
+                                </Typography>
+                            </Box>
+                        )}
+                        {!isMobile && (
+                            <Typography sx={{ fontWeight: 600, fontSize: '0.95rem' }}>
+                                {menuItems.find(item => item.path === location.pathname)?.text || 'Administration'}
+                            </Typography>
+                        )}
                     </Box>
-                    <LogoutButton />
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {isMobile && (
+                            <IconButton
+                                onClick={() => navigate('/reservation')}
+                                size="small"
+                                sx={{ color: 'text.secondary', mr: 0.5 }}
+                            >
+                                <ArrowBack sx={{ fontSize: 20 }} />
+                            </IconButton>
+                        )}
+                        <LogoutButton />
+                    </Box>
                 </Toolbar>
             </AppBar>
 
-            {/* Sidebar */}
+            {/* Sidebar - Desktop: persistent drawer, Mobile: swipeable drawer (kept for extra access) */}
             <Box component="nav" sx={{
                 width: { md: open ? drawerWidth : 0 }, flexShrink: { md: 0 },
                 transition: theme.transitions.create('width', {
@@ -198,38 +233,108 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
                     duration: theme.transitions.duration.leavingScreen,
                 }),
             }}>
-                <Drawer
-                    variant={isMobile ? 'temporary' : 'persistent'}
-                    open={open}
-                    onClose={handleDrawerToggle}
-                    ModalProps={{ keepMounted: true, disableAutoFocus: true, disableEnforceFocus: true, disableRestoreFocus: true }}
-                    sx={{
-                        '& .MuiDrawer-paper': {
-                            width: drawerWidth, bgcolor: '#fff',
-                            borderRight: `1px solid ${theme.palette.divider}`,
-                            boxShadow: isMobile ? '-4px 0 24px rgba(84,73,65,0.1)' : 'none',
-                        },
-                    }}
-                >
-                    {drawer}
-                </Drawer>
+                {isMobile ? (
+                    <SwipeableDrawer
+                        open={open}
+                        onClose={handleDrawerToggle}
+                        onOpen={() => setOpen(true)}
+                        disableBackdropTransition
+                        disableDiscovery={false}
+                        swipeAreaWidth={20}
+                        ModalProps={{ keepMounted: true }}
+                        sx={{
+                            '& .MuiDrawer-paper': {
+                                width: drawerWidth, bgcolor: '#fff',
+                                borderRight: `1px solid ${theme.palette.divider}`,
+                                boxShadow: '4px 0 24px rgba(84,73,65,0.1)',
+                            },
+                        }}
+                    >
+                        {drawer}
+                    </SwipeableDrawer>
+                ) : (
+                    <Drawer
+                        variant="persistent"
+                        open={open}
+                        onClose={handleDrawerToggle}
+                        ModalProps={{ keepMounted: true, disableAutoFocus: true, disableEnforceFocus: true, disableRestoreFocus: true }}
+                        sx={{
+                            '& .MuiDrawer-paper': {
+                                width: drawerWidth, bgcolor: '#fff',
+                                borderRight: `1px solid ${theme.palette.divider}`,
+                            },
+                        }}
+                    >
+                        {drawer}
+                    </Drawer>
+                )}
             </Box>
 
             {/* Main content */}
             <Box component="main" tabIndex={-1} sx={{
                 flexGrow: 1,
                 width: { md: open ? `calc(100% - ${drawerWidth}px)` : '100%' },
-                mt: { xs: '56px', md: '60px' },
+                mt: { xs: '52px', md: '60px' },
+                // Add padding at bottom on mobile for bottom nav
+                pb: { xs: '72px', md: 0 },
                 outline: 'none',
                 transition: theme.transitions.create('width', {
                     easing: theme.transitions.easing.sharp,
                     duration: theme.transitions.duration.leavingScreen,
                 }),
             }}>
-                <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 2, sm: 3 } }}>
+                <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 3 }, px: { xs: 1.5, sm: 3 } }}>
                     {children}
                 </Container>
             </Box>
+
+            {/* Mobile Bottom Navigation */}
+            {isMobile && (
+                <Paper
+                    elevation={0}
+                    sx={{
+                        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1200,
+                        borderTop: `1px solid ${theme.palette.divider}`,
+                        bgcolor: 'rgba(255,255,255,0.95)',
+                        backdropFilter: 'blur(12px)',
+                        // Safe area for phones with gesture bars
+                        pb: 'env(safe-area-inset-bottom, 0px)',
+                    }}
+                >
+                    <BottomNavigation
+                        value={currentNavValue >= 0 ? currentNavValue : 0}
+                        onChange={(_, newValue) => {
+                            navigate(menuItems[newValue].path);
+                        }}
+                        showLabels
+                        sx={{
+                            bgcolor: 'transparent', height: 64,
+                            '& .MuiBottomNavigationAction-root': {
+                                color: 'text.secondary',
+                                minWidth: 0, py: 1,
+                                '&.Mui-selected': {
+                                    color: theme.palette.primary.dark,
+                                },
+                            },
+                            '& .MuiBottomNavigationAction-label': {
+                                fontSize: '0.68rem', fontWeight: 500,
+                                mt: 0.25,
+                                '&.Mui-selected': {
+                                    fontSize: '0.68rem', fontWeight: 700,
+                                },
+                            },
+                        }}
+                    >
+                        {menuItems.map((item) => (
+                            <BottomNavigationAction
+                                key={item.text}
+                                label={item.text.replace('Tableau de bord', 'Accueil')}
+                                icon={React.cloneElement(item.icon, { sx: { fontSize: 24 } })}
+                            />
+                        ))}
+                    </BottomNavigation>
+                </Paper>
+            )}
         </Box>
     );
 };

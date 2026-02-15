@@ -3,11 +3,12 @@ import {
     Box, Paper, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
     TableRow, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, Chip, Alert, CircularProgress, Switch, FormControlLabel, Menu, MenuItem,
-    ListItemIcon, ListItemText, useTheme, useMediaQuery, Avatar, Stack
+    ListItemIcon, ListItemText, useTheme, useMediaQuery, Avatar, Stack, Card, CardContent
 } from '@mui/material';
 import {
     AddOutlined, EditOutlined, DeleteOutlined, CheckCircleOutlined,
-    EmailOutlined, MoreVert, PeopleOutlined, PersonOffOutlined
+    EmailOutlined, MoreVert, PeopleOutlined, PersonOffOutlined,
+    CalendarTodayOutlined
 } from '@mui/icons-material';
 import { useAuth } from '../../context/hooks/useAuth';
 
@@ -239,97 +240,213 @@ const Users: React.FC = () => {
             {error && <Alert severity="error" sx={{ mb: 2.5 }} onClose={() => setError(null)}>{error}</Alert>}
             {success && <Alert severity="success" sx={{ mb: 2.5 }} onClose={() => setSuccess(null)}>{success}</Alert>}
 
-            {/* Table */}
-            <Paper elevation={0} sx={{
-                bgcolor: '#fff', borderRadius: 3, overflow: 'hidden',
-                border: `1px solid ${theme.palette.divider}`,
-            }}>
-                <TableContainer>
-                    <Table>
-                        <TableHead>
-                            <TableRow sx={{ bgcolor: `${theme.palette.primary.main}06` }}>
-                                {['Utilisateur', 'Email', 'Rôle', 'Statut', 'Inscription', 'Actions'].map((h) => (
-                                    <TableCell key={h} sx={{
-                                        fontWeight: 600, color: 'text.primary', fontSize: '0.78rem', py: 1.5,
-                                        borderBottom: `1px solid ${theme.palette.divider}`,
-                                    }}>{h}</TableCell>
-                                ))}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
+            {/* Mobile Card View */}
+            {isMobile ? (
+                <Box>
+                    {users.length === 0 ? (
+                        <Paper elevation={0} sx={{
+                            bgcolor: '#fff', borderRadius: 3, p: 4, textAlign: 'center',
+                            border: `1px solid ${theme.palette.divider}`,
+                        }}>
+                            <PeopleOutlined sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                            <Typography sx={{ color: 'text.secondary' }}>Aucun utilisateur trouvé</Typography>
+                        </Paper>
+                    ) : (
+                        <Stack spacing={1.5}>
                             {users.map((u) => {
                                 const roleConf = getRoleConfig(u.role, u.is_admin);
                                 const statusConf = getStatusConfig(u, theme);
                                 const initials = `${u.firstname?.charAt(0) || ''}${u.lastname?.charAt(0) || ''}`.toUpperCase();
                                 return (
-                                    <TableRow key={u.id} sx={{
-                                        '&:hover': { bgcolor: `${theme.palette.primary.main}04` },
-                                        '& td': { borderBottom: `1px solid ${theme.palette.divider}`, py: 1.5 },
+                                    <Card key={u.id} elevation={0} sx={{
+                                        bgcolor: '#fff', borderRadius: 3,
+                                        border: `1px solid ${theme.palette.divider}`,
+                                        '&:active': { bgcolor: `${theme.palette.primary.main}04` },
                                     }}>
-                                        <TableCell>
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                <Avatar sx={{
-                                                    width: 34, height: 34, fontSize: '0.72rem', fontWeight: 600,
-                                                    bgcolor: `${theme.palette.primary.main}14`,
-                                                    color: theme.palette.primary.dark,
-                                                }}>{initials}</Avatar>
-                                                <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.85rem' }}>
-                                                    {u.firstname} {u.lastname}
-                                                </Typography>
+                                        <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                                            {/* Top: avatar + name + actions */}
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1.25 }}>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, flex: 1, minWidth: 0 }}>
+                                                    <Avatar sx={{
+                                                        width: 38, height: 38, fontSize: '0.78rem', fontWeight: 600,
+                                                        bgcolor: `${theme.palette.primary.main}14`,
+                                                        color: theme.palette.primary.dark, flexShrink: 0,
+                                                    }}>{initials}</Avatar>
+                                                    <Box sx={{ minWidth: 0 }}>
+                                                        <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.9rem', lineHeight: 1.3 }}>
+                                                            {u.firstname} {u.lastname}
+                                                        </Typography>
+                                                        <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {u.email}
+                                                        </Typography>
+                                                    </Box>
+                                                </Box>
+                                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, u)}
+                                                    sx={{
+                                                        color: 'text.secondary', width: 36, height: 36, flexShrink: 0,
+                                                        '&:hover': { bgcolor: `${theme.palette.primary.main}08` },
+                                                    }}>
+                                                    <MoreVert sx={{ fontSize: 20 }} />
+                                                </IconButton>
                                             </Box>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography sx={{ color: 'text.secondary', fontSize: '0.82rem' }}>
-                                                {u.email}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Chip label={u.role_display_name || roleConf.label} size="small" sx={{
-                                                fontWeight: 600, fontSize: '0.7rem', height: 24, borderRadius: 1.5,
-                                                ...(roleConf.variant === 'error' ? {
-                                                    bgcolor: `${theme.palette.error.main}14`, color: theme.palette.error.main,
-                                                } : roleConf.variant === 'warning' ? {
-                                                    bgcolor: `${theme.palette.warning.main}14`, color: theme.palette.warning.dark,
-                                                } : {
-                                                    bgcolor: `${theme.palette.primary.main}14`, color: theme.palette.primary.dark,
-                                                }),
-                                            }} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Chip label={statusConf.label} size="small" sx={{
-                                                bgcolor: statusConf.bg, color: statusConf.color,
-                                                fontWeight: 600, fontSize: '0.7rem', height: 24, borderRadius: 1.5,
-                                            }} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
-                                                {new Date(u.created_at).toLocaleDateString('fr-FR')}
-                                            </Typography>
-                                        </TableCell>
-                                        <TableCell>
-                                            <IconButton size="small" onClick={(e) => handleMenuOpen(e, u)}
-                                                sx={{
-                                                    color: 'text.secondary', width: 32, height: 32,
-                                                    '&:hover': { bgcolor: `${theme.palette.primary.main}08` },
-                                                }}>
-                                                <MoreVert sx={{ fontSize: 18 }} />
-                                            </IconButton>
-                                        </TableCell>
-                                    </TableRow>
+
+                                            {/* Chips row: role + status + date */}
+                                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    <Chip label={u.role_display_name || roleConf.label} size="small" sx={{
+                                                        fontWeight: 600, fontSize: '0.7rem', height: 24, borderRadius: 1.5,
+                                                        ...(roleConf.variant === 'error' ? {
+                                                            bgcolor: `${theme.palette.error.main}14`, color: theme.palette.error.main,
+                                                        } : roleConf.variant === 'warning' ? {
+                                                            bgcolor: `${theme.palette.warning.main}14`, color: theme.palette.warning.dark,
+                                                        } : {
+                                                            bgcolor: `${theme.palette.primary.main}14`, color: theme.palette.primary.dark,
+                                                        }),
+                                                    }} />
+                                                    <Chip label={statusConf.label} size="small" sx={{
+                                                        bgcolor: statusConf.bg, color: statusConf.color,
+                                                        fontWeight: 600, fontSize: '0.7rem', height: 24, borderRadius: 1.5,
+                                                    }} />
+                                                </Box>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                                    <CalendarTodayOutlined sx={{ fontSize: 12, color: 'text.disabled' }} />
+                                                    <Typography sx={{ color: 'text.secondary', fontSize: '0.7rem' }}>
+                                                        {new Date(u.created_at).toLocaleDateString('fr-FR')}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+
+                                            {/* Quick actions for pending users */}
+                                            {!u.is_admin && !u.admin_validated && u.email_verified_at && (
+                                                <Box sx={{ display: 'flex', gap: 1, mt: 1.5, pt: 1.5, borderTop: `1px solid ${theme.palette.divider}` }}>
+                                                    <Button
+                                                        size="small" fullWidth variant="contained"
+                                                        startIcon={<CheckCircleOutlined sx={{ fontSize: 16 }} />}
+                                                        onClick={() => handleAuthorize(u.id)}
+                                                        sx={{
+                                                            textTransform: 'none', fontWeight: 600, fontSize: '0.78rem',
+                                                            borderRadius: 2, py: 0.75,
+                                                            bgcolor: theme.palette.success.main,
+                                                            '&:hover': { bgcolor: theme.palette.success.dark },
+                                                        }}
+                                                    >
+                                                        Autoriser
+                                                    </Button>
+                                                    <Button
+                                                        size="small" fullWidth variant="outlined"
+                                                        startIcon={<PersonOffOutlined sx={{ fontSize: 16 }} />}
+                                                        onClick={() => handleRejectUser(u.id)}
+                                                        sx={{
+                                                            textTransform: 'none', fontWeight: 600, fontSize: '0.78rem',
+                                                            borderRadius: 2, py: 0.75,
+                                                            borderColor: theme.palette.error.main, color: theme.palette.error.main,
+                                                            '&:hover': { bgcolor: `${theme.palette.error.main}08`, borderColor: theme.palette.error.dark },
+                                                        }}
+                                                    >
+                                                        Rejeter
+                                                    </Button>
+                                                </Box>
+                                            )}
+                                        </CardContent>
+                                    </Card>
                                 );
                             })}
-                            {users.length === 0 && (
-                                <TableRow>
-                                    <TableCell colSpan={6} sx={{ textAlign: 'center', py: 6 }}>
-                                        <PeopleOutlined sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
-                                        <Typography sx={{ color: 'text.secondary' }}>Aucun utilisateur trouvé</Typography>
-                                    </TableCell>
+                        </Stack>
+                    )}
+                </Box>
+            ) : (
+                /* Desktop Table View */
+                <Paper elevation={0} sx={{
+                    bgcolor: '#fff', borderRadius: 3, overflow: 'hidden',
+                    border: `1px solid ${theme.palette.divider}`,
+                }}>
+                    <TableContainer>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: `${theme.palette.primary.main}06` }}>
+                                    {['Utilisateur', 'Email', 'Rôle', 'Statut', 'Inscription', 'Actions'].map((h) => (
+                                        <TableCell key={h} sx={{
+                                            fontWeight: 600, color: 'text.primary', fontSize: '0.78rem', py: 1.5,
+                                            borderBottom: `1px solid ${theme.palette.divider}`,
+                                        }}>{h}</TableCell>
+                                    ))}
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </Paper>
+                            </TableHead>
+                            <TableBody>
+                                {users.map((u) => {
+                                    const roleConf = getRoleConfig(u.role, u.is_admin);
+                                    const statusConf = getStatusConfig(u, theme);
+                                    const initials = `${u.firstname?.charAt(0) || ''}${u.lastname?.charAt(0) || ''}`.toUpperCase();
+                                    return (
+                                        <TableRow key={u.id} sx={{
+                                            '&:hover': { bgcolor: `${theme.palette.primary.main}04` },
+                                            '& td': { borderBottom: `1px solid ${theme.palette.divider}`, py: 1.5 },
+                                        }}>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                                    <Avatar sx={{
+                                                        width: 34, height: 34, fontSize: '0.72rem', fontWeight: 600,
+                                                        bgcolor: `${theme.palette.primary.main}14`,
+                                                        color: theme.palette.primary.dark,
+                                                    }}>{initials}</Avatar>
+                                                    <Typography sx={{ fontWeight: 600, color: 'text.primary', fontSize: '0.85rem' }}>
+                                                        {u.firstname} {u.lastname}
+                                                    </Typography>
+                                                </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography sx={{ color: 'text.secondary', fontSize: '0.82rem' }}>
+                                                    {u.email}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip label={u.role_display_name || roleConf.label} size="small" sx={{
+                                                    fontWeight: 600, fontSize: '0.7rem', height: 24, borderRadius: 1.5,
+                                                    ...(roleConf.variant === 'error' ? {
+                                                        bgcolor: `${theme.palette.error.main}14`, color: theme.palette.error.main,
+                                                    } : roleConf.variant === 'warning' ? {
+                                                        bgcolor: `${theme.palette.warning.main}14`, color: theme.palette.warning.dark,
+                                                    } : {
+                                                        bgcolor: `${theme.palette.primary.main}14`, color: theme.palette.primary.dark,
+                                                    }),
+                                                }} />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip label={statusConf.label} size="small" sx={{
+                                                    bgcolor: statusConf.bg, color: statusConf.color,
+                                                    fontWeight: 600, fontSize: '0.7rem', height: 24, borderRadius: 1.5,
+                                                }} />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography sx={{ color: 'text.secondary', fontSize: '0.8rem' }}>
+                                                    {new Date(u.created_at).toLocaleDateString('fr-FR')}
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <IconButton size="small" onClick={(e) => handleMenuOpen(e, u)}
+                                                    sx={{
+                                                        color: 'text.secondary', width: 32, height: 32,
+                                                        '&:hover': { bgcolor: `${theme.palette.primary.main}08` },
+                                                    }}>
+                                                    <MoreVert sx={{ fontSize: 18 }} />
+                                                </IconButton>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                                {users.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={6} sx={{ textAlign: 'center', py: 6 }}>
+                                            <PeopleOutlined sx={{ fontSize: 40, color: 'text.disabled', mb: 1 }} />
+                                            <Typography sx={{ color: 'text.secondary' }}>Aucun utilisateur trouvé</Typography>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Paper>
+            )}
 
             {/* Action Menu */}
             <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}
