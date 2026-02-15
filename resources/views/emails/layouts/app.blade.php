@@ -130,7 +130,7 @@
         <div class="footer">
             <p>&copy; {{ date('Y') }} Remuzat. Tous droits réservés.</p>
             <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
-            <p>Pour toute question, contactez-nous à {{ config('mail.from.address') }}</p>
+            <p>Pour toute question, contactez-nous à <a href="mailto:contact@anthonybarei.fr" style="color: #667eea; text-decoration: none;">contact@anthonybarei.fr</a></p>
         </div>
     </div>
 </body>

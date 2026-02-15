@@ -62,6 +62,12 @@ class BrevoApiTransport extends AbstractTransport
             $payload['textContent'] = $textBody;
         }
 
+        // Disable Brevo tracking pixel (no alt attribute, hurts mail-tester score)
+        $payload['headers'] = [
+            'X-Mailin-Track-Opens' => '0',
+            'X-Mailin-Track-Clicks' => '0',
+        ];
+
         try {
             $response = $this->client->post(self::API_URL, [
                 'headers' => [
